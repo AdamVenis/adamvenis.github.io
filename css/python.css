@@ -1,3 +1,9 @@
+.highlight {
+    word-wrap: normal;
+    overflow-x: auto;
+    white-space: pre;
+    background-color: #fffff3;
+}
 .highlight .hll { background-color: #ffffcc }
 .highlight .c { color: #408080; font-style: italic } /* Comment */
 .highlight .err { border: 1px solid #FF0000 } /* Error */

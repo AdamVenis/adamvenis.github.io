@@ -34,6 +34,7 @@ ax.grid()
 plt.show()
 ```
 <img src="/images/graph1.png" width="640" class="center">
+<div class="footnote">Pictured: empirical mean, averaged over 1000 trials to reduce variance</div>
 
 We see that our estimates are generally less accurate when $$p$$ is closer to 0.5, and more accurate when $$p$$ is close to 0 or 1. If you want to make guarantees about the accuracy of your estimator, you would use the worst case value, which here is around 0.25. The surprising thing I'd like to show in this post is that we can construct a new estimator that has a better guarantee than the empirical mean. Our new estimator will take the empirical mean estimate and move it slightly towards 0.5. This effectively "trades off" accuracy at the boundary values of $$p$$ for accuracy around the middle.
 
@@ -59,7 +60,7 @@ which exactly explains the graph! Whew, that was quite a bit of work.
 
 ---------------------
 
-As an aside, since I'm lazy, I don't like doing tedious algebra and would prefer to let computers do all the work for me. For that I use sympy!
+As an aside, since I'm lazy, I'd prefer to not have to do all this tedious algebra. Fortunately sympy can do all the work for me! Here is the same algebra as above, in sympy:
 
 ```python
 import sympy
@@ -153,6 +154,7 @@ ax.grid()
 plt.show()
 ```
 <img src="/images/graph2.png" width="640" class="center">
+<div class="footnote">Pictured: empirical mean in red, and improved estimators in blue and green</div>
 
 We did it! These modified estimators are mutually equivalent, and both have better worst case guarantees than the simple empirical mean.
 

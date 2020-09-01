@@ -49,3 +49,13 @@ ul.posts li {
   margin-right: auto;
   width: 50%;
 }
+
+.footnote {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+  font-size: 0.75em;
+  font-style: italic;
+  text-align: center;
+}
