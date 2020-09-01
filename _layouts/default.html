@@ -4,6 +4,11 @@
 			<title>{{ page.title }}</title>
 			<!-- link to main stylesheet -->
 			<link rel="stylesheet" type="text/css" href="/css/main.css">
+			{% if page.usemathjax %}
+			<script type="text/javascript" async
+			 src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML">
+			  </script>
+			{% end if %}
 		</head>
 		<body>
 			<nav>
@@ -14,17 +19,11 @@
 	        		<li><a href="/blog">Blog</a></li>
 	    		</ul>
 			</nav>
-			{% if page.usemathjax %}
-			<script type="text/javascript" async
-			 src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML">
-			  </script>
-			{% end if %}
 
 			<div class="container">
-			
 			{{ content }}
-			
 			</div><!-- /.container -->
+			
 			<footer>
 	    		<ul>
 	        		<li><a href="mailto:adamvenis@gmail.com">email</a></li>
