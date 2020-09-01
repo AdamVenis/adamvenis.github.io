@@ -1,14 +1,10 @@
-Making Predictions
+Suppose you find yourself repeatedly conducting an experiment that sometimes fails and sometimes succeeds. Suppose further that each iteration of the experiment is identical, and random chance is the only difference between success and failure. This is analogous to repeatedly flipping a biased coin, a coin that shows heads with a probability that isn't necessarily 0.5 as it is for a usual coin.
 
-Suppose you repeatedly conduct an experiment that sometimes fails and sometimes succeeds. Suppose further that each iteration of the experiment is identical, and random chance is the only difference between success and failure. This is analogous to repeatedly flipping a biased coin. A biased coin will show heads with a probability that isn't necessarily 0.5, as it is for a usual coin.
+Let $$p$$ be the unknown probability that your experiment succeeds. You would like to know the true value of $$p$$, but the best you can do is to estimate, based on the results of your experiments/coinflips/whatever, what `p` might be. 
 
-Let `p` be the unknown probability that your experiment succeeds. You would like to know the true value of `p`, but the best you can do is to estimate, based on the results of your experiments/coinflips/whatever, what `p` might be. 
+An Estimator is a scheme for coming up with such an estimate `x`, given a collection of observations. For example, say you've flipped your coin 10 times and heads has come up 7 times. An intuitive estimate for `p` would be `x = 0.7`. This estimator is called the _empirical mean_. Now it's possible that `p`'s true value is actually 0.7, but it could also one of infinitely many other possible values, in which case your estimate would not be perfectly accurate. In these cases it makes sense to measure the degree of accuracy of your estimate. There are different ways to measure this accuracy. One way is to compute the difference between your estimate and the true value, i.e. $$|x - p|$$. We want this value to be 0, or at least as close to 0 as possible. Another measurement that's more commonly seen in statistics is the function `(x - p)^2`. The idea of squaring the difference is to further penalize larger differences. These functions are called _loss functions_, and the two examples given are known as _L1 loss_ and _L2 loss_ respectively. 
 
-An Estimator is a scheme for coming up with such an estimate `x`, given a collection of observations. For example, say you've flipped your coin 10 times and heads has come up 7 times. A very intuitive estimate for `p` would be `x = 0.7`. This estimator is called the empirical mean. Now it is possible that `p` is actually 0.7, but it could also be infinitely many other possible values, which case your estimate would not be perfectly accurate. In these cases it makes sense to measure the degree of accuracy of your estimate. There are many different ways to measure this accuracy. One might be the difference between your estimate and the true value, i.e. `|x - p|`. We want this value to be 0, or at least as close to 0 as possible. Another measurement that is more common in statistics is the function `(x - p)^2`. The idea of squaring the difference is to further penalize larger differences. These functions are called loss functions, and the two examples given are known as L1 loss and L2 loss respectively. 
-
-A surprising thing I'd like to demonstrate is that there are estimators that can do better than the empirical mean, when evaluated using L2 loss.
-
-We can visualize the L2 loss as follows: start with an underlying `p`, generate samples using `p`, use the estimator to generate an estimate `x`, and then compute `(x - p)^2`. The following code and graph shows the loss using the empirical mean estimator for different values of `p`.
+We can calculate the L2 loss as follows: start with some underlying value for `p`, generate sample observations using `p`, use the estimator to generate an estimate `x`, and then check the value of your loss, `(x - p)^2`. The following code and graph shows the L2 loss using the empirical mean estimator for different values of `p`.
 
 ```
 import matplotlib
@@ -32,13 +28,14 @@ ax.set(xlabel='parameter p', ylabel='L2 Loss')
 ax.grid()
 plt.show()
 ```
+
 [graph1.png]
 
-We see that our estimates are generally less accurate when `p` is closer to 0.5, and more accurate when `p` is close to 0 or 1. So it's fair to say that the worst case scenario in terms of accuracy is around `p=0.5`. The core idea I'd like to show is a new estimator that takes the empirical mean and moves it slightly towards 0.5 will have a better worst case scenario. It'll do this by "trading off" accuracy at the boundaries for accuracy around `p=0.5`.
+We see that our estimates are generally less accurate when `p` is closer to 0.5, and more accurate when `p` is close to 0 or 1. If you want to make guarantees about the accuracy of your estimator, you would use the worst case value, which here is around 0.25. The surprising thing I'd like to show in this post is that we can construct a new estimator that has a better guarantee than the empirical mean. Our new estimator will take the empirical mean estimate and move it slightly towards 0.5. This effectively "trades off" accuracy at the boundary values of `p` for accuracy around the middle.
 
-Notice that this curve closely matches the parabola `f(p) = p-p^2`. In fact if we were to run infinitely many trials, this curve would converge to that parabola exactly. Another way of saying that is that the parabola p-p^2 is the expected value of estimation error, denoted E[(x-p)^2]. Let's work out the details to be sure.
+Notice that this curve closely matches the parabola `f(p) = p - p^2`. In fact if we were to run infinitely many trials, this curve would converge to that parabola exactly. Another way of saying that is that the parabola `p - p^2` is the expected value of estimation error, denoted $$\mathbb{E}[(x - p)^2]$$. Let's work out the details to be sure.
 
-Using the formula for expected value, it is the sum over all outcomes of the function value at that outcome times the probability of that outcome. In our setting, an outcome is observing some `k` heads after flipping a coin `n` times, where `0<= k <= n` and `x = k/n`. Then by linearity of expectation we expand:
+Recall the formula for expected value, that it is the sum over all outcomes of the function value at that outcome times the probability of that outcome. In our setting, an outcome is observing some `k` heads after flipping a coin `n` times, where `0<= k <= n` and `x = k/n`. Then by linearity of expectation we expand:
 
 E[(x-p)^2] = E[(k/n - p)^2] = E[k^2/n^2 - 2pk/n + p^2] = E[k^2]/n^2 - 2pE[k]/n + p^2
 
