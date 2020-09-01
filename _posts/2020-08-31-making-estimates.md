@@ -33,7 +33,7 @@ ax.set(xlabel='parameter p', ylabel='L2 Loss')
 ax.grid()
 plt.show()
 ```
-<img src="/images/graph1.png" width="640">
+<img src="/images/graph1.png" width="640" class="center">
 
 We see that our estimates are generally less accurate when $$p$$ is closer to 0.5, and more accurate when $$p$$ is close to 0 or 1. If you want to make guarantees about the accuracy of your estimator, you would use the worst case value, which here is around 0.25. The surprising thing I'd like to show in this post is that we can construct a new estimator that has a better guarantee than the empirical mean. Our new estimator will take the empirical mean estimate and move it slightly towards 0.5. This effectively "trades off" accuracy at the boundary values of $$p$$ for accuracy around the middle.
 
@@ -82,7 +82,7 @@ def estimate_hyperbolic_interpolation(p, t, n):
     return (x - p) ** 2
 ```
 
-The second way I don't know a name for, so I'd like to coin it as "hyperbolic interpolation". If $$x=\frac{a}{b}$$ and $$y=\frac{c}{d}$$, then $$\frac{a+tc}{b+td}$$ lies between $$x$$ and $$y$$ for $$0 \leq t < \infty$$. You can imagine how adjusting t interpolates between the two values. This method is also inspired by Bayesian inference, as it matches the format of updating the Beta distribution, the conjugate prior for the binomial distribution. In our setting, this looks like $$\frac{k+t \cdot 1}{n+t \cdot 2}$$. In code we have:
+The second way I don't know a name for, so I'd like to coin it as "hyperbolic interpolation". If $$x=\frac{a}{b}$$ and $$y=\frac{c}{d}$$, then $$\frac{a+tc}{b+td}$$ lies between $$x$$ and $$y$$ for $$0 \leq t < \infty$$. You can imagine how adjusting $$t$$ interpolates between the two values. This method is also inspired by Bayesian inference, as it matches the format of updating the Beta distribution, the conjugate prior for the binomial distribution. In our setting, this looks like $$\frac{k+t \cdot 1}{n+t \cdot 2}$$. In code we have:
 
 ```python
 def estimate_linear_interpolation(p, t, n):
@@ -152,7 +152,7 @@ ax.set(xlabel='parameter p', ylabel='L2 Loss')
 ax.grid()
 plt.show()
 ```
-![Loss of different estimators](/images/graph2.png)
+<img src="/images/graph2.png" width="640" class="center">
 
 We did it! These modified estimators are mutually equivalent, and both have better worst case guarantees than the simple empirical mean.
 
