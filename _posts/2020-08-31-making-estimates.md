@@ -1,3 +1,10 @@
+---
+title: "Making Estimates"
+mathjax: true
+---
+
+# Making Estimates
+
 Suppose you find yourself repeatedly conducting an experiment that sometimes fails and sometimes succeeds. Suppose further that each iteration of the experiment is identical, and random chance is the only difference between success and failure. This is analogous to repeatedly flipping a biased coin, a coin that shows heads with a probability that isn't necessarily 0.5 as it is for a usual coin.
 
 Let $$p$$ be the unknown probability that your experiment succeeds. You would like to know the true value of $$p$$, but the best you can do is to estimate, based on the results of your experiments/coinflips/whatever, what `p` might be. 
