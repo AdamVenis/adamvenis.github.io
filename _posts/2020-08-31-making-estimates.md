@@ -60,13 +60,13 @@ which exactly explains the graph! Whew, that was quite a bit of work.
 
 ---------------------
 
-As an aside, since I'm lazy, I'd prefer to not have to do all this tedious algebra. Fortunately sympy can do all the work for me! Here is the same algebra as above, in sympy:
+As an aside, since I'm lazy, I'd prefer to not have to do all this tedious algebra. Fortunately the python package sympy can work out the details for us! Here is the same algebra as above, using sympy:
 
 ```python
 import sympy
 p, n, k = sympy.symbols('p n k')
-error = (k/n - p)**2
-print(error.expand().subs(k**2, n*p*(1-p) + n*n*p*p).subs(k, n*p).simplify())
+error = (k / n - p) ** 2
+print(error.expand().subs(k ** 2, n * p * (1 - p) + n * n * p * p).subs(k, n * p).simplify())
 >>> -p*(p - 1)/n
 ```
 
@@ -77,18 +77,18 @@ Now let's embark on the adventure of coming up with a new estimator that moves t
 There are two normal ways I know of for moving a value $$x$$ towards another value $$y$$. The first, most common one, is linear interpolation: $$(1-t)x + ty$$ for some $$0 \leq t \leq 1$$. $$t=0$$ gives you $$x$$, $$t=1$$ gives you $$y$$, and $$t=0.5$$ gives you the midpoint between $$x$$ and $$y$$. In our problem setting, the estimate would like $$(1-t)\frac{k}{n} + t\frac{1}{2}$$, where we would need to pick a particular value for $$t$$. In code we have:
 
 ```python
-def estimate_hyperbolic_interpolation(p, t, n):
+def estimate_linear_interpolation(p, t, n):
     k = sum(np.random.random(size=n) < p)
-    x = (k + t) / (n + 2 * t)
+    x = (1 - t) * k / n + t / 2
     return (x - p) ** 2
 ```
 
 The second way I don't know a name for, so I'd like to coin it as "hyperbolic interpolation". If $$x=\frac{a}{b}$$ and $$y=\frac{c}{d}$$, then $$\frac{a+tc}{b+td}$$ lies between $$x$$ and $$y$$ for $$0 \leq t < \infty$$. You can imagine how adjusting $$t$$ interpolates between the two values. This method is also inspired by Bayesian inference, as it matches the format of updating the Beta distribution, the conjugate prior for the binomial distribution. In our setting, this looks like $$\frac{k+t \cdot 1}{n+t \cdot 2}$$. In code we have:
 
 ```python
-def estimate_linear_interpolation(p, t, n):
+def estimate_hyperbolic_interpolation(p, t, n):
     k = sum(np.random.random(size=n) < p)
-    x = (1 - t) * k / n + t / 2
+    x = (k + t) / (n + 2 * t)
     return (x - p) ** 2
 ```
 
