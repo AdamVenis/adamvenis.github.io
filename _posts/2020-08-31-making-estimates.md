@@ -159,3 +159,7 @@ plt.show()
 We did it! These modified estimators are mutually equivalent, and both have better worst case guarantees than the simple empirical mean.
 
 QED! Until next time...
+
+
+Sources:
+H. Steinhaus - The Problem of Estimation (https://projecteuclid.org/euclid.aoms/1177706876)
