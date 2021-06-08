@@ -18,7 +18,7 @@ print(total_time / num_trials)
 >>> 7.327787560000161e-06
 ```
 
-Not bad! It already only takes 7.3μs, but let's try to do better! As an amusing side note, the naive recursive solution takes ~4s on my laptop, so we're already over 500,000x faster.
+Not bad! It already only takes 7.3μs, but let's try to do better. As an amusing side note, the naive recursive solution takes ~4s on my laptop, so we're already over 500,000x faster.
 
 ---
 
@@ -126,7 +126,7 @@ print(total_time / num_trials)
 >>> 9.136303600025712e-07
 ```
 
-Another 1.2x speedup!
+Another 1.2x speedup.
 
 On this note, there's another Fibonacci identity that can save us some time. Notice that we're adding every third term, each of which is equal to the sum of the two preceding terms. This means that adding **all** the terms should give us double the result we want. E.g.:
 
@@ -218,7 +218,7 @@ $$
     1 & 1\\
     1 & 0
 \end{bmatrix}^n
-=
+=:
 A^n
 $$
 
@@ -279,7 +279,7 @@ So we get an order of magnitude speedup, but still 3x slower than our previous a
 
 <img src="/images/fibonacci_1.png" width="640" class="center">
 
-It looks like our new algorithm eventually gets faster for limits above 10^80, so it takes quite a while. Not what we hoped for, but at least now we know.
+It looks like our new algorithm eventually gets faster for limits above $$10^80$$, so it takes quite a while. Not what we hoped for, but at least now we know.
 
 ## Closing thoughts
 
