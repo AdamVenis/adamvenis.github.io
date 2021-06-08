@@ -233,10 +233,10 @@ def P2_squaring(limit = 4*10**6):
   while A[0][0] < limit:
     B = np.array([[1, 1], [1, 0]])
     while True:
-      C = B @ B
-      if (A @ C)[0][1] > limit:
+      B_squared = B @ B
+      if (A @ B_squared)[0][1] > limit:
         break
-      B = C
+      B = B_squared
     A = A @ B
   if A[0][0] % 2 == 0:
     return (2 * A[0][0] + A[0][1] - 1) // 2
@@ -250,7 +250,7 @@ print(total_time / num_trials)
 >>> 2.4940721999155356e-05
 ```
 
-Much slower, because numpy as a bunch of overhead for multiplying matrices. Now don't look at the following code, which is the same algorithm with matrix multiplication done barehand, because it's atrocious:
+Much slower, because numpy has a bunch of overhead for multiplying matrices. Now don't look at the following code, which is the same algorithm with matrix multiplication done barehand, because it's atrocious:
 
 ```python
 def P2_squaring_optimized(limit = 4*10**6):
@@ -275,7 +275,7 @@ print(total_time / num_trials)
 >>>2.9668219599989244e-06
 ```
 
-So we get an order of magnitude speedup, but still 3x slower than our previous attempts. This is because while we've improved the asymptotic complexity, our constant overhead has become worse, and the actual $$n$$ is small. What we would expect is that as we increase the limit, this squaring function will eventually get faster than our previous attempts. Let's see:
+So we get an order of magnitude speedup, but still 3x slower than our previous attempts. This is because while we've improved the asymptotic complexity, our constant overhead has become worse, and the actual $$n$$ is small. What we would expect is that as we increase the limit, this squaring function will eventually get faster than our previous attempts. Let's check the runtime at a few different limits, plotted on a log-log plot:
 
 <img src="/images/fibonacci_1.png" width="640" class="center">
 
