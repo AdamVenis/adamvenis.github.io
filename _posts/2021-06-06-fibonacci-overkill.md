@@ -2,7 +2,7 @@
 title: "Fibonacci Overkill"
 mathjax: true
 ---
-We'll try to write an optimally fast solution to Project Euler's [Problem 2](https://projecteuler.net/problem=2), which asks us to find the sum of the even-valued Fibonacci numbers that do not exceed four million. This is a beginner-level problem. After getting past the hump of realizing that Fibonacci numbers need to be cached/memoized/dynamic programming'd, a simple python solution might look like this:
+Let's try to find a fast solution to Project Euler's [Problem 2](https://projecteuler.net/problem=2), which asks us to find the sum of the even-valued Fibonacci numbers that do not exceed four million. This is a beginner-level problem. After getting past the hump of realizing that Fibonacci numbers need to be cached/memoized/dynamic programming'd, a typical python solution might look like this:
 
 ```python
 import timeit
@@ -18,7 +18,7 @@ print(total_time / num_trials)
 >>> 7.327787560000161e-06
 ```
 
-Not bad! It already only takes 7.3μs, but let's try to do better. As an amusing side note, the naive recursive solution takes ~4s on my laptop, so we're already over 500,000x faster.
+Not bad! It already only takes 7.3μs, but let's try to do better. As an amusing side note, the naive recursive solution without caching takes ~4s on my laptop, so we're already over 500,000x faster.
 
 ---
 
@@ -279,7 +279,7 @@ So we get an order of magnitude speedup, but still 3x slower than our previous a
 
 <img src="/images/fibonacci_1.png" width="640" class="center">
 
-It looks like our new algorithm eventually gets faster for limits above $$10^80$$, so it takes quite a while. Not what we hoped for, but at least now we know.
+It looks like our new algorithm eventually gets faster for limits above $$10^{80}$$, so it takes quite a while. Not what we hoped for, but at least now we know.
 
 ## Closing thoughts
 
