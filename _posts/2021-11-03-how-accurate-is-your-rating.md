@@ -148,7 +148,7 @@ S(k)
 &= \frac{1 + \alpha^{-k}}{\alpha^{\frac{k(k-1)}{2}}} = \alpha^{\frac{-k(k-1)}{2}} + \alpha^{\frac{-k(k+1)}{2}}
 \end{align*}$$
 
-What a beautiful simplification! Now let's clean up and summarize what we've done. We solved for $$S(k)$$ for all $$k \in \mathbb{N}$$, but remember that $$S$$ is only proportional to the steady state distribution $$S^*$$. To renormalize, we need to divide by the sum $$\sum_{k \in \mathbb{N}} S(k)$$ to find the scaled version of $$S$$ that is an actual probability distribution. This is an infinite sum, but at first glance it resembles a geometric series so we might hope to use an identity like $$T = \sum_{k \in \mathbb{N}} \alpha^k = \frac{1}{1-\alpha}$$ to find a closed form. Unfortunately, $$T$$ is actually a [Theta function](https://en.wikipedia.org/wiki/Theta_function) that is known to have no closed form. So close, yet so far.
+What a beautiful simplification! Now let's clean up and summarize what we've done. We solved for $$S(k)$$ for all $$k \in \mathbb{N}$$, but remember that $$S$$ is only proportional to the steady state distribution $$S^*$$. To renormalize, we need to divide by the sum $$\sum_{k \in \mathbb{N}} S(k)$$ to find the scaled version of $$S$$ that is an actual probability distribution. This is an infinite sum, but at first glance it resembles a geometric series so we might hope to use an identity like $$\sum_{k \in \mathbb{N}} \alpha^k = \frac{1}{1-\alpha}$$ to find a closed form. Unfortunately, $$T$$ is actually a [Theta function](https://en.wikipedia.org/wiki/Theta_function) that is known to have no closed form. So close, yet so far.
 
 At least we can approximate $$T$$ astronomically more efficiently than the Monte Carlo approach, with the following code:
 
