@@ -99,6 +99,7 @@ The Monte Carlo solution is decent, but it'd be great to get a more accurate ans
 ### Proposition
 
 Let $$M$$ be a finite-state Markov Chain on $$n$$ states, with transition matrix $$A$$, and steady state distribution $$S$$. Now let $$G(V, E)$$ be the undirected graph induced by $$M$$, where $$V = S$$ and $$E = \{(u, v) | u, v \in V, u \neq v, A_{u,v} \neq 0\ \textit{or} \ A_{v,u} \neq 0 \}$$. If $$G$$ is acyclic, then:
+
 $$A_{u,v} S_u = A_{v,u} S_v\  \forall u, v \in M'$$
 
 ### Proof
