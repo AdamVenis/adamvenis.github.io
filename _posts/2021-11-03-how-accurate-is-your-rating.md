@@ -13,7 +13,7 @@ Once a player's rating has converged on their true skill, the rating itself will
 
 To state our question formally, we'll need some assumptions. For simplicity we'll use the Elo system, which gives us a way to model outcomes of games between two unequally skilled players by sampling from a prescribed Bernoulli distribution, akin to flipping a biased coin. We also assume perfect matchmaking, so a player's next game will always be matched with someone at exactly their current rating. This is often pretty close to the truth in online video games, especially more popular games with larger player populations.
 
-With this setup, a player's rating over time can be modelled as a random walk around their true rating. With a typical K-factor of 16 and perfect matchmaking, a win will increase the rating by exactly 8 points, and a loss will decrease it by exactly 8 points. Therefore, letting $r_0$ be the true rating, our random walk has discrete support over the state set $$\{r_0 + 8k, k \in \mathbb{Z}\}$$. For simplicity we'll identify states with the integers, so ratings of $$\{r_0 - 16, r_0 - 8, r_0, r_0 + 8, r_0 + 16\}$$ will be represented by states $$\{-2, -1, 0, 1, 2\}$$.
+With this setup, a player's rating over time can be modelled as a random walk around their true rating. With a typical K-factor of 16 and perfect matchmaking, a win will increase the rating by exactly 8 points, and a loss will decrease it by exactly 8 points. Therefore, letting $$r_0$$ be the true rating, our random walk has discrete support over the state set $$\{r_0 + 8k, k \in \mathbb{Z}\}$$. For simplicity we'll identify states with the integers, so ratings of $$\{r_0 - 16, r_0 - 8, r_0, r_0 + 8, r_0 + 16\}$$ will be represented by states $$\{-2, -1, 0, 1, 2\}$$.
 
 <img src="/images/number_line.png" width="640" class="center">
 <div class="footnote">The possible values for this random walk are in one to one correspondence with the integers</div>
@@ -98,9 +98,9 @@ The Monte Carlo solution is decent, but it'd be great to get a more accurate ans
 
 ### Proposition
 
-Let $$M$$ be a finite-state Markov Chain on $$n$$ states, with transition matrix $$A$$, and steady state distribution $$S$$. Now let $$G(V, E)$$ be the undirected graph induced by $$M$$, where $$V = S$$ and $$E = \{(u, v) | u, v \in V, u \neq v, A_{u,v} \neq 0\ \textit{or} \ A_{v,u} \neq 0 \}$$. If $$G$$ is acyclic, then:
+Let $$M$$ be a finite-state Markov Chain on $$n$$ states, with transition matrix $$A$$, and steady state distribution $$S$$. Now let $$G(V, E)$$ be the undirected graph induced by $$M$$, where $$V = S$$ and $$E = \{(u, v) \mid \ u, v \in V, u \neq v, A_{u,v} \neq 0\ \textit{or} \ A_{v,u} \neq 0 \}$$. If $$G$$ is acyclic, then:
 
-$$A_{u,v} S_u = A_{v,u} S_v\  \forall u, v \in M'$$
+$$A_{u,v} S_u = A_{v,u} S_v \ \ \ \forall u, v \in M'$$
 
 ### Proof
 
