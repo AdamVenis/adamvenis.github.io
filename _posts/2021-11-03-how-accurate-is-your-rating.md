@@ -13,7 +13,7 @@ Once a player's rating has converged on their true skill, the rating itself will
 
 To state our question formally, we'll need some assumptions. For simplicity we'll use the Elo system, which gives us a way to model outcomes of games between two unequally skilled players by sampling from a prescribed Bernoulli distribution, akin to flipping a biased coin. We also assume perfect matchmaking, so a player's next game will always be matched with someone at exactly their current rating. This is often pretty close to the truth in online video games, especially more popular games with larger player populations.
 
-With this setup, a player's rating over time can be modelled as a random walk around their true rating. With a typical K-factor of 16 and perfect matchmaking, a win will cause the rating to increase by exactly 8 points, and a loss will cause it to decrease by exactly 8 points. Therefore our random walk has discrete support over the state set $$\{r_0 + 8k, k \in \mathbb{Z}\}$$. For simplicity we'll identify states with the integers, so states $$\{-2, -1, 0, 1, 2\}$$ correspond to ratings $$\{r_0 - 16, r_0 - 8, r_0, r_0 + 8, r_0 + 16\}$$ and so on.
+With this setup, a player's rating over time can be modelled as a random walk around their true rating. With a typical K-factor of 16 and perfect matchmaking, a win will increase the rating by exactly 8 points, and a loss will decrease it by exactly 8 points. Therefore our random walk has discrete support over the state set $$\{r_0 + 8k, k \in \mathbb{Z}\}$$. For simplicity we'll identify states with the integers, so states $$\{-2, -1, 0, 1, 2\}$$ will correspond to ratings $$\{r_0 - 16, r_0 - 8, r_0, r_0 + 8, r_0 + 16\}$$.
 
 <img src="/images/number_line.png" width="640" class="center">
 
@@ -23,14 +23,14 @@ $$
     A_{i, j} =
 \begin{cases}
     0 &\ \text{if } |i-j| \neq 1 \\
-    \frac{1}{1 + 10^\frac{-8(i-j)}{400}} & \text{if } i < j \leq 0 \text{ or } i > j \geq 0 \\
-    \frac{1}{1 + 10^\frac{8(i-j)}{400}}       & \text{if } j < i \leq 0 \text{ or } j > i \geq 0 \\
+    \frac{1}{1 + 10^{\left( \frac{-8(i-j)}{400} \right) }} & \text{if } i < j \leq 0 \text{ or } i > j \geq 0 \\
+    \frac{1}{1 + 10^{\left( \frac{8(i-j)}{400} \right)}}       & \text{if } j < i \leq 0 \text{ or } j > i \geq 0 \\
 \end{cases}
 $$
 
-Where the second case is a number slightly above $$0.5$$ for moving towards your true rating, and the third case is slightly below $$0.5$$ for moving away from your true rating.
+The second case here is a number slightly above $$0.5$$ for moving towards your true rating, and the third case is slightly below $$0.5$$ for moving away from your true rating.
 
-The Markov Chain associated to this random walk has a steady state distribution. The formalized question is now: the Markov Chain with transition probabilities described above, what is the average distance from the $$0$$ state, when averaged over its steady state distribution? Put another way, what is the Mean Absolute Error (MAE) of a player's converged rating?
+The Markov Chain associated to this random walk has a steady state distribution. The formalized question is now: for the Markov Chain with transition probabilities described above, what is the average distance from the $$0$$ state, when averaged over its steady state distribution? Put another way, what is the Mean Absolute Error (MAE) of a player's converged rating?
 
 ## Monte Carlo Solution
 
@@ -89,21 +89,11 @@ Mean Average Error: 29.845985600157935
 
 There will be a slight bias towards smaller MAE since this simulation starts exactly at the true rating, but it seems to be dominated by simulation variance because the MAE shown is slightly increasing as the number of simulation steps increase.
 
-So there you have it, on average your rating will be about 30 points away from what it should be. All things considered, that's not too far off! By doing the same procedure we can also look at some quantiles:
-
-<center>
-
-| Quantile | Error |
-| :-: | :-: |
-| 50% | 24 |
-| 80% | 40 |
-| 95% | 56 |
-
-</center>
+So there you have it, on average your rating will be about 30 points away from what it should be. All things considered, that's not too far off! With the same procedure we can also look at some quantiles: the 50th percentile error is 24, the 80th is 40, and the 95th is 56.
 
 ## Analytic Solution
 
-The Monte Carlo solution is decent, but it'd be great to get a more accurate answer, and ideally an exact answer. We're trying to find the mean absolute error, which we calculate directly if we knew the steady state distribution of the Markov Chain we constructed. The standard technique to find such a steady state distribution uses linear algebra to solve for $$Av=v$$, but our Markov Chain has infinitely many states, so that won't work. Fortunately we can still make progress by using some clever techniques.
+The Monte Carlo solution is decent, but it'd be great to get a more accurate answer, and ideally an exact answer. We're trying to find the mean absolute error, which we could calculate directly if we knew the steady state distribution of the Markov Chain we constructed. The standard technique to find such a steady state distribution uses linear algebra to solve for $$Av=v$$, but our Markov Chain has infinitely many states, so that won't work. Fortunately we can still make progress by using some clever techniques.
 
 ### Proposition
 
@@ -112,7 +102,7 @@ $$A_{u,v} S_u = A_{v,u} S_v\  \forall u, v \in M'$$
 
 ### Proof
 
-We can assume $$G$$ is connected without loss of generality, as otherwise we could apply same logic to each of the connected components without any issues. Now we proceed by induction on $$|M|$$, the number of states in $$M$$. If $$|M| = 1$$, $$G$$ has no edges so the proposition is vacuously true. Otherwise $$G$$ has some vertex $$x$$ with degree 1, that is connected to another vertex $$y$$. Now by the definition of a steady state, $$S(x) = \sum_{y} A_{y, x} S(y)$$, but in this case the right hand side only has two nonzero terms:
+We can assume $$G$$ is connected without loss of generality, as otherwise we could apply same logic to each of the connected components without any issues. Now we proceed by induction on $$\mid M \mid$$, the number of states in $$M$$. If $$\mid M \mid$$ $$= 1$$, $$G$$ has no edges so the proposition is vacuously true. Otherwise $$G$$ has some vertex $$x$$ with degree 1, that is connected to another vertex $$y$$. Now by the definition of a steady state, $$S(x) = \sum_{y} A_{y, x} S(y)$$, but in this case the right hand side only has two nonzero terms:
 
 $$S(x) = A_{x,x} S(x) + A_{y,x} S(y) = \frac{A_{y,x}}{1 - A_{x,x}} S(y)$$
 
@@ -121,8 +111,6 @@ Since $$A$$ is a stochastic matrix, $$\sum_{y} A_{x,y} = 1$$, so $$A_{x,x} = 1 -
 $$S(x) = \frac{A_{y,x}}{A_{x,y}} S(y)$$
 
 Therefore the proposition holds at the edge $$(x, y)$$. By the inductive hypothesis it also holds for all edges in $$G \setminus \{x\}$$ which is also acyclic. Since $$x$$ has degree 1, this covers all the edges in $$G$$, so the proposition holds, QED.
-
-----
 
 Now we'll assume that a steady state exists. Let $$S^*$$ be the steady state distribution of $$M'$$, i.e. a function that assigns probabilities to states in $$M'$$ such that $$\sum_{x \in M'} S^*(x) = 1$$. Then let $$S$$ be another function with the same signature defined by $$S(x) = \frac{S^*(x)}{S^*(0)}$$ be an unnormalized function of the same sort, scaled so that $$S(0) = 1$$.
 
@@ -148,7 +136,7 @@ S(k)
 &=  \frac{(1 + \alpha^{-k})}{(1 + \alpha^{k-1})} \frac{(1 + \alpha^{-(k-1)})}{(1 + \alpha^{k-2})} \cdots \frac{(1 + \alpha^{-2})}{(1 + \alpha)} (1 + \alpha^{-1})
 \end{align*}$$
 
-And finally collapse them, noting that $\frac{1 + \alpha^{-k}}{1 + \alpha^k} = \alpha^{-k}$:
+And finally collapse them, noting that $$\frac{1 + \alpha^{-k}}{1 + \alpha^k} = \alpha^{-k}$$:
 
 $$
 \begin{align*}
