@@ -118,11 +118,11 @@ Now we'll assume that a steady state exists. Let $$S^*$$ be the steady state dis
 
 We'll use this construction to iteratively solve for $$S(1)$$, and then $$S(2)$$, and so on. Notice that $$M$$ satisfies the assumptions of the proposition: it is a line, so it is certainly acyclic. Technically $$M$$ has infinitely many states and the proposition was for finitely many states, but if we squint a little and apply the technique anyways, we can still make progress. So applying the proposition gives:
 
-$$S(1) = \frac{A_{0, 1}}{A_{1, 0}} S(0) = \frac{A_{0, 1}}{A_{1, 0}} \cdot 1 = \frac{1}{\left( \frac{1}{1 + 10^\frac{-8}{400}} \right)} = 1 + 10^\frac{-8}{400} \cong 1.955$$
+$$S(1) = \frac{A_{0, 1}}{A_{1, 0}} S(0) = \frac{A_{0, 1}}{A_{1, 0}} \cdot 1 = \frac{1}{\left( \frac{1}{1 + 10^{\left( \frac{-8}{400} \right)}} \right)} = 1 + 10^{\left( \frac{-8}{400} \right)} \cong 1.955$$
 
-It makes sense for $$S(1)$$ to be a bit under $$2$$ (while $$S(0) = 1$$), because recall we sandwiched two states into one for $$S(1)$$, each which will have a bit less weight than $$S(0)$$ which did not come from two states. For clarity, let's call $$\alpha = 10^\frac{8}{400}$$. Then $$S(1) = 1 + \alpha^{-1}$$. Similarly let's calculate $$S(2)$$:
+It makes sense for $$S(1)$$ to be a bit under $$2$$ (while $$S(0) = 1$$), because recall we sandwiched two states into one for $$S(1)$$, each which will have a bit less weight than $$S(0)$$ which did not come from two states. For clarity, let's call $$\alpha = 10^{\left( \frac{8}{400} \right)}$$. Then $$S(1) = 1 + \alpha^{-1}$$. Similarly let's calculate $$S(2)$$:
 
-$$S(2) = \frac{A_{1, 2}}{A_{2, 1}} S(1) = \frac{\left( \frac{1}{1 + 10^\frac{8}{400}} \right) }{ \left( \frac{1}{1 + 10^\frac{-16}{400}} \right) } S(1) = \frac{1 + 10^\frac{-16}{400}}{1 + 10^\frac{8}{400}} S(1) = \frac{1 + \alpha^{-2}}{1 + \alpha} (1 + \alpha^{-1})$$
+$$S(2) = \frac{A_{1, 2}}{A_{2, 1}} S(1) = \frac{\left( \frac{1}{1 + 10^{\left( \frac{8}{400} \right)}} \right) }{ \left( \frac{1}{1 + 10^{\left( \frac{-16}{400} \right)}} \right) } S(1) = \frac{1 + 10^{\left( \frac{-16}{400} \right)}}{1 + 10^{\left( \frac{8}{400} \right)}} S(1) = \frac{1 + \alpha^{-2}}{1 + \alpha} (1 + \alpha^{-1})$$
 
 ...
 
