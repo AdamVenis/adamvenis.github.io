@@ -146,7 +146,7 @@ $$
 S(k)
 &=  (1 + \alpha^{-k}) \frac{(1 + \alpha^{-(k-1)})}{(1 + \alpha^{k-1})} \frac{(1 + \alpha^{-(k-2)})}{(1 + \alpha^{k-2})} \cdots \frac{(1 + \alpha^{-1})}{(1 + \alpha)} \\
 &= (1 + \alpha^{-k}) \alpha^{-(k-1)} \alpha^{-(k-2)} \cdots \alpha^{-1} \\
-&= \frac{1 + \alpha^{-k}}{\alpha^{\frac{k(k-1)}{2}}}
+&= \frac{1 + \alpha^{-k}}{\alpha^{\frac{k(k-1)}{2}}} \\
 &= \alpha^{\frac{-k(k-1)}{2}} + \alpha^{\frac{-k(k+1)}{2}}
 \end{align*}$$
 
