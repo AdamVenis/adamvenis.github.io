@@ -2,6 +2,7 @@
 title: "How Accurate is Your Rating?"
 mathjax: true
 ---
+You're playing a competitive online team game. You notice that your teammates seem to be underperforming, and can't help but wonder why. Are they [boosted](https://www.sciencedirect.com/science/article/pii/S1875952120301014)? Are they just having a bad game? Has their rating not converged yet? Has their rating been artificially inflated because they happened to win several of their most recent games? In this post we analyze and quantify the likelihood of this last possibility.
 
 ## Skill Ratings
 
@@ -11,14 +12,14 @@ Once a player's rating has converged on their true skill, the rating itself will
 
 ## How Accurate is Your Rating?
 
-To state our question formally, we'll need some assumptions. For simplicity we'll use the Elo system, which gives us a way to model outcomes of games between two unequally skilled players by sampling from a prescribed Bernoulli distribution, akin to flipping a biased coin. We also assume perfect matchmaking, so a player's next game will always be matched with someone at exactly their current rating. This is often pretty close to the truth in online video games, especially more popular games with larger player populations.
+To state our question formally, we'll need some assumptions. We'll use the Elo system, which gives us a simple way to sample outcomes of games between two players by using the prescribed formula. We also assume that at any rating the matchmaker will give you an opponent that is perfectly matched for you. This is often pretty close to the truth in online video games, especially more popular games with larger player populations.
 
-With this setup, a player's rating over time can be modelled as a random walk around their true rating. With a typical K-factor of 16 and perfect matchmaking, a win will increase the rating by exactly 8 points, and a loss will decrease it by exactly 8 points. Therefore, letting $$r_0$$ be the true rating, our random walk has discrete support over the state set $$\{r_0 + 8k, k \in \mathbb{Z}\}$$. For simplicity we'll identify states with the integers, so ratings of $$\{r_0 - 16, r_0 - 8, r_0, r_0 + 8, r_0 + 16\}$$ will be represented by states $$\{-2, -1, 0, 1, 2\}$$.
+With this setup, a player's rating over time can be modelled as a random walk around their true rating. With a typical K-factor of 16 and perfect matchmaking, a win will increase the rating by exactly 8 points, and a loss will decrease it by exactly 8 points. Therefore, letting $$r_0$$ be the true rating, the random walk has discrete support over the state set $$\{r_0 + 8k, k \in \mathbb{Z}\}$$. For simplicity we'll identify these states with the integers, so ratings of $$\{r_0 - 16, r_0 - 8, r_0, r_0 + 8, r_0 + 16\}$$ will be represented by states $$\{-2, -1, 0, 1, 2\}$$.
 
 <img src="/images/number_line.png" width="640" class="center">
 <div class="footnote">The possible values for this random walk are in one to one correspondence with the integers</div>
 
-The probabilities associated with moving left and right in our random walk depend on which state we're in, which is different from the prototypical unbiased setting for random walks. This makes sense for rating systems though; it should be more likely that you take a step towards your true rating than away from it. Let $$A$$ be the matrix of transition probabilities where $$A_{i,j}$$ is the probability of transitioning from state $$i$$ to state $$j$$. Then by the Elo formula,
+The probabilities associated with moving left and right in this random walk depend on which state we're in, which is different from the prototypical unbiased setting for random walks. This makes sense for rating systems though; it should be more likely that you take a step towards your true rating than away from it. Let $$A$$ be the matrix of transition probabilities where $$A_{i,j}$$ is the probability of transitioning from state $$i$$ to state $$j$$. Then by the Elo formula,
 
 $$
     A_{i, j} =
