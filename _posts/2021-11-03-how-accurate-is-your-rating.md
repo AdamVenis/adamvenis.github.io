@@ -190,4 +190,6 @@ Mean Average Error: 29.80184236053276
 
 <img src="/images/rating_graph_2.png" width="640" class="center">
 
-So it looks like the Monte Carlo estimate is ~0.017 off, and it runs in 7s compared to 200μs for the analytic solution (3000x speedup). I hope you learned something! Until next time...
+So it looks like the Monte Carlo estimate is ~0.017 off, and it runs in 7s compared to 200μs for the analytic solution (3000x speedup).
+
+In summary, we found that on average, ratings prescribed by the Elo system will be inaccurate by around 30 points. We first calculated this with a crude but direct Monte Carlo simulation, and then calculated it again with a more complicated but accurate analytical derivation. I hope you learned something! Until next time...
