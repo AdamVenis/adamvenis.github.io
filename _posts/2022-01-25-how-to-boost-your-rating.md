@@ -4,7 +4,7 @@ mathjax: true
 ---
 You've been playing a competitive online game for a while. You notice that rating is relatively stagnant, but you'd like to reach the next level, and then take a break. This is a common engagement pattern for players, as seen in e.g. [lichess](https://lichess.org/stat/rating/distribution/blitz) or [dotabuff](https://www.opendota.com/distributions) Ideally you'd like to do so in a way that doesn't require you to get better at the game, because that seems hard. In this post we'll investigate how many games it'll take for you to hit that next level purely by random chance.
 
-<img src="/images/lichess_ratings.png" width="640" class="center">
+<img src="/images/lichess_blitz_ratings.png" width="640" class="center">
 <div class="footnote">Rating distributions tend to look like bell curves, except at thresholds when players often stop playing to preserve their rating. Lots of people seem to like being 2000 rating!</div>
 
 ## Random Walks of Ratings
@@ -77,7 +77,7 @@ plt.plot(*list(zip(*steps_distribution)))
 plt.show()
 ```
 
-<img src="/images/boost_your_rating_1.png" width="640" class="center">
+<img src="/images/boost_your_rating.png" width="640" class="center">
 <div class="footnote">This distribution is extremely right skewed, because if you get unlucky and lose your first few games, you can get stuck below your true rating for a long time. The mean is 200 but the median is only 64. Players might characterize this as "elo hell", but that's a topic for another time. </div>
 
 ## Faster and more accurate computation
