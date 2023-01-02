@@ -5,13 +5,13 @@ mathjax: true
 You've been playing a competitive online game for a while. You notice that rating is relatively stagnant, but you'd like to reach the next level, and then take a break. This is a common engagement pattern for players, as seen in e.g. [lichess](https://lichess.org/stat/rating/distribution/blitz) or [dotabuff](https://www.opendota.com/distributions) Ideally you'd like to do so in a way that doesn't require you to get better at the game, because that seems hard. In this post we'll investigate how many games it'll take for you to hit that next level purely by random chance.
 
 <img src="/images/lichess_blitz_ratings.png" width="640" class="center">
-<div class="footnote">Rating distributions tend to look like bell curves, except at thresholds when players often stop playing to preserve their rating. Lots of people seem to like being 2000 rating!</div>
+<div class="footnote">Rating distributions tend to look like bell curves, except at thresholds when players often stop playing to preserve their rating. Lots of people seem to like being at 2000 rating!</div>
 
 ## Random Walks of Ratings
 
 We saw in a [previous post](https://adamvenis.github.io/2021/11/03/how-accurate-is-your-rating.html) that in the Elo rating system, ratings will randomly fluctuate around their intended value. On average they'll be about 30 points off, but we can also try to calculate a different question: if I want to reach, say, 50 rating points above my true value, how many games will I expect to have to play for that to happen by random chance?
 
-In stochastic process theory, this is called a [hitting time](https://en.wikipedia.org/wiki/Hitting_time) problem. We want to calculate $$\tau(0, n)$$. As in the previous post, we'll calculate this first using a fast-and-dirty Monte Carlo method, and then try to solve it with more sophisticated tools.
+In stochastic process theory, this is called a [hitting time](https://en.wikipedia.org/wiki/Hitting_time) problem. We want to calculate $$\tau(0, n)$$, the time starting from $$0$$ to hit a point $$n$$ steps in the positive direction. As in the previous post, we'll calculate this first using a fast-and-dirty Monte Carlo method, and then try to solve it with more sophisticated tools.
 
 ## Monte Carlo Simulation
 
@@ -47,9 +47,9 @@ Because we're working with the Elo rating system with a standard $$k$$-factor of
 192.84
 >>> monte_carlo_hitting_time(7)
 177.02
->>> monte_carlo_hitting_time(7, num_trials=100000)
+>>> monte_carlo_hitting_time(7, num_trials=100_000)
 200.27782
->>> monte_carlo_hitting_time(7, num_trials=100000)
+>>> monte_carlo_hitting_time(7, num_trials=100_000)
 200.41436
 ```
 
@@ -78,11 +78,11 @@ plt.show()
 ```
 
 <img src="/images/boost_your_rating.png" width="640" class="center">
-<div class="footnote">This distribution is extremely right skewed, because if you get unlucky and lose your first few games, you can get stuck below your true rating for a long time. The mean is 200 but the median is only 64. Players might characterize this as "elo hell", but that's a topic for another time. </div>
+<div class="footnote">This distribution is extremely right skewed. If you get unlucky and lose your first few games, you can get stuck below your true rating for a long time. The mean is 200 but the median is only 64. Players might characterize this as "Elo hell", but that's a topic for another time. </div>
 
 ## Faster and more accurate computation
 
-Now we try to simplify the problem to see if we can solve it faster and more accurately. Borrowing the notation from the previous post, let $$S^*$$ be the Markov Chain representing the dynamics of one's rating changing over time. Then for a generic Markov Chain the formula for $$\tau(x, y)$$, the expected time to first reach state $$y$$ starting from state $$x$$, is:
+Now we try to simplify the problem to see if we can solve it faster and more accurately. Borrowing the notation from the previous post, let $$S^*$$ be the Markov Chain representing the dynamics of one's rating changing over time. For a generic Markov Chain the formula for $$\tau(x, y)$$, the expected time to first reach state $$y$$ starting from state $$x$$, is:
 
 $$
     \tau(x, y) =
@@ -92,7 +92,7 @@ $$
 \end{cases}
 $$
 
-We're working with a specific type of Markov Chain, so we can simplify this formula. If we're starting at state $$0$$ and want to reach state $$n$$, we'll need to reach state $$n-1$$ first, before then proceeding to $$n$$. So $$\tau(0, n) = \tau(0, n-1) + \tau(n-1, n)$$. Now, before reaching $$n-1$$ we must reach $$n-2$$, and so on, which gives the formula:
+We're working with a specific type of Markov Chain, so we use a simpler formula. If we're starting at state $$0$$ and want to reach state $$n$$, we'll need to reach state $$n-1$$ first, before then proceeding to $$n$$. So $$\tau(0, n) = \tau(0, n-1) + \tau(n-1, n)$$. Now, before reaching $$n-1$$ we must reach $$n-2$$, and so on, which gives the formula:
 
 $$\tau(0, n) = \sum_{k=0}^{n-1} \tau(k, k+1)$$
 
@@ -108,7 +108,7 @@ $$
 \end{align*}
 $$
 
-After everything is said and done, we've recovered a recursive formula for $\tau(k, k+1)$. To test it, we can code it up and see if the results agree with our Monte Carlo simulation. Notice that we have to put a limit on the recursion, since our function is defined over $$\mathbb{Z}$$, so if we ran it normally it would never terminate. When the limit is sufficiently negative, the probability of taking a step in the negative direction, aka losing a game, is negligible so we can round it to 0.
+At this point, we've established a recursive formula for $$\tau(k, k+1)$$. To test the formula, we can implement it in code and see if the results agree with our Monte Carlo simulation. Notice that we have to put a limit on the recursion, since our states include all of $$\mathbb{Z}$$, so if we ran this formula as described the program would never terminate. When the limit is a sufficiently large negative number, the probability of taking a step in the negative direction - aka losing a game - is negligible so we can round it to 0.
 
 ```python
 def recursive_hitting_time(n, limit):
@@ -127,7 +127,7 @@ def recursive_stepping_time(k, limit):
 200.01670103012418
 ```
 
-For limits below -40 we can see that the error is less than machine epsilon. Our answer agrees with the Monte Carlo answer, so we can be pretty confident that our derivation was correct. Also, this code runs in substantially less than 1 millisecond, so we got a speedup of over 9000 over the Monte Carlo method. It's good progress, but ideally we could express the answer in a direct closed form. We can do better if we make a sacrifice to the algebra gods:
+For limits below -40 we can see that the error is less than machine epsilon. Our answer agrees with the Monte Carlo answer, so we can be pretty confident that our derivation was correct. Also, this code runs in less than 1 millisecond, so we got a speedup of over 9000 over the Monte Carlo method. It's good progress, but ideally we could express the answer directly in a closed form. We can in fact do better if we get our hands dirty and make a sacrifice to the algebra gods:
 
 $$
 \begin{align*}
