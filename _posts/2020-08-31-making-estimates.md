@@ -1,6 +1,7 @@
 ---
 title: "Making Estimates"
 mathjax: true
+layout: post
 ---
 
 Suppose you find yourself repeatedly conducting an experiment that sometimes fails and sometimes succeeds. Suppose further that each iteration of the experiment is identical, and random chance is the only difference between success and failure. This is analogous to repeatedly flipping a biased coin, a coin that shows heads with a probability that isn't necessarily 0.5 as it is for a usual coin.

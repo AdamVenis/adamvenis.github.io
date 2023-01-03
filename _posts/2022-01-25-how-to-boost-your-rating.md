@@ -1,6 +1,7 @@
 ---
 title: "How To Boost Your Rating"
 mathjax: true
+layout: post
 ---
 You've been playing a competitive online game for a while. You notice that rating is relatively stagnant, but you'd like to reach the next level, and then take a break. This is a common engagement pattern for players, as seen in e.g. [lichess](https://lichess.org/stat/rating/distribution/blitz) or [dotabuff](https://www.opendota.com/distributions) Ideally you'd like to do so in a way that doesn't require you to get better at the game, because that seems hard. In this post we'll investigate how many games it'll take for you to hit that next level purely by random chance.
 

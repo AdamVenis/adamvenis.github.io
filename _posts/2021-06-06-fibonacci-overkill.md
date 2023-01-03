@@ -1,6 +1,7 @@
 ---
 title: "Fibonacci Overkill"
 mathjax: true
+layout: post
 ---
 Let's try to find a fast solution to Project Euler's [Problem 2](https://projecteuler.net/problem=2), which asks us to find the sum of the even-valued Fibonacci numbers that do not exceed four million. This is a beginner-level problem. After getting past the hump of realizing that Fibonacci numbers need to be cached/memoized/dynamic programming'd, a typical python solution might look like this:
 

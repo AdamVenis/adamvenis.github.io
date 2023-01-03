@@ -1,6 +1,7 @@
 ---
 title: "How Accurate is Your Rating?"
 mathjax: true
+layout: post
 ---
 You're playing a competitive online team game. You notice that your teammates seem to be underperforming, and can't help but wonder why. Are they [boosted](https://www.sciencedirect.com/science/article/pii/S1875952120301014)? Are they just having a bad game? Has their rating not converged yet? Has their rating been artificially inflated because they happened to win several of their most recent games? In this post we analyze and quantify the likelihood of this last possibility.
 

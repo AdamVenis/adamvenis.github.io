@@ -2,3 +2,6 @@ name: Adam's Math Blog
 markdown: kramdown
 mathjax: true
 google_analytics: UA-176955671-1
+plugins:
+  - jekyll-feed
+author: Adam Venis
