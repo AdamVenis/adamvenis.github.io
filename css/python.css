@@ -3,6 +3,8 @@
     overflow-x: auto;
     white-space: pre;
     background-color: #fffff3;
+	padding-left: 3px;
+	padding-right: 3px;
 }
 .highlight .hll { background-color: #ffffcc }
 .highlight .c { color: #408080; font-style: italic } /* Comment */

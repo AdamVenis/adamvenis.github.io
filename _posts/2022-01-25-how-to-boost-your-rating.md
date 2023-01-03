@@ -3,7 +3,7 @@ title: "How To Boost Your Rating"
 mathjax: true
 layout: post
 ---
-You've been playing a competitive online game for a while. You notice that rating is relatively stagnant, but you'd like to reach the next level, and then take a break. This is a common engagement pattern for players, as seen in e.g. [lichess](https://lichess.org/stat/rating/distribution/blitz) or [dotabuff](https://www.opendota.com/distributions) Ideally you'd like to do so in a way that doesn't require you to get better at the game, because that seems hard. In this post we'll investigate how many games it'll take for you to hit that next level purely by random chance.
+You've been playing a competitive online game for a while. You notice that rating is relatively stagnant, but you'd like to reach the next level, and then take a break. This is a common engagement pattern for players, as seen in e.g. [Chess](https://lichess.org/stat/rating/distribution/blitz) or [Dota 2](https://www.opendota.com/distributions) Ideally you'd like to do so in a way that doesn't require you to get better at the game, because that seems hard. In this post we'll investigate how many games it'll take for you to hit that next level purely by random chance.
 
 <img src="/images/lichess_blitz_ratings.png" width="640" class="center">
 <div class="footnote">Rating distributions tend to look like bell curves, except at thresholds when players often stop playing to preserve their rating. Lots of people seem to like being at 2000 rating!</div>
