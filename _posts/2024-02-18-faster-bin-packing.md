@@ -17,7 +17,7 @@ For all of the algorithms we list we're going to set B=100 and randomly generate
 Fundamentally, a solution to an instance of the BPP (we can refer to an instance as 'a BPP') is a function mapping N items into used bins, so we could conceivably iterate over all possible functions of that form and identify which one is valid, i.e. does not overfill any bin, and uses the fewest bins. Since there are only N items, there must be at most N bins, so there are N^N such functions. Below is some python code that does what we've described, and a graph showing how the runtime grows with input size.
 
 <details>
-    <summary<>Python Code</summary>
+    <summary>Python Code</summary>
 ```python
 import collections
 import itertools
