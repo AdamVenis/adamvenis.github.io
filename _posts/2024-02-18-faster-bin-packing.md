@@ -18,8 +18,7 @@ Fundamentally, a solution to an instance of the BPP (we can refer to an instance
 
 <details>
     <summary>Python Code</summary>
-```python
-import collections
+<pre><code class="language-python">import collections
 import itertools
 
 def pack_brute_force(weights, B):
@@ -35,6 +34,7 @@ def pack_brute_force(weights, B):
         ):
             best_pack = list(pack.values())
     return best_pack
+</code></pre>
 </details>
 ```
 
