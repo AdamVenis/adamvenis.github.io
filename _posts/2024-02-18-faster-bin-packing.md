@@ -18,25 +18,26 @@ Fundamentally, a solution to an instance of the BPP (we can refer to an instance
 
 <details>
     <summary<>Python Code</summary>
-    ```python
-    import collections
-    import itertools
+```python
+import collections
+import itertools
 
-    def pack_brute_force(weights, B):
-        best_pack = None
-        N = len(weights)
-        for bin_indexes in itertools.product(*[range(N)] * N):
-            pack = collections.defaultdict(list)
-            for item, bin_index in zip(weights, bin_indexes):
-                pack[bin_index].append(item)
+def pack_brute_force(weights, B):
+    best_pack = None
+    N = len(weights)
+    for bin_indexes in itertools.product(*[range(N)] * N):
+        pack = collections.defaultdict(list)
+        for item, bin_index in zip(weights, bin_indexes):
+            pack[bin_index].append(item)
 
-            if all(sum(b) <= B for b in pack.values()) and (
-                best_pack is None or len(pack) < len(best_pack)
-            ):
-                best_pack = list(pack.values())
-        return best_pack
-    ```
+        if all(sum(b) <= B for b in pack.values()) and (
+            best_pack is None or len(pack) < len(best_pack)
+        ):
+            best_pack = list(pack.values())
+    return best_pack
 </details>
+```
+
 [TODO: add graph]
 
 * note: can't use variable name `bin` because it's a keyword in python to convert numbers into binary
@@ -70,8 +71,8 @@ As an aside, it's an interesting exercise to come up with the smallest BPP where
             bin_weights.append(w)
 
     return bins
-    ```
 </details>
+    ```
 
 Now we can use the result from DBF to improve on our brute force algorithm
 
