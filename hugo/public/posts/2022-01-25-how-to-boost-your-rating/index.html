@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>How To Boost Your Rating | My New Hugo Site</title>
+
+    <link rel="stylesheet" href="/css/main.css">
+
+
+      <script src="/js/main.js"></script>
+
+
+</head>
+<body>
+  <header>
+    <h1>My New Hugo Site</h1>
+
+  <nav>
+    <ul>
+    <li>
+      <a href="/">Home</a>
+    </li>
+    <li>
+      <a aria-current="true" class="ancestor" href="/posts/">Posts</a>
+    </li>
+    <li>
+      <a href="/tags/">Tags</a>
+    </li>
+    </ul>
+  </nav>
+
+
+  </header>
+  <main>
+    
+  <h1>How To Boost Your Rating</h1>
+
+  
+  
+  <time datetime="0001-01-01T00:00:00&#43;00:00">January 1, 1</time>
+
+  <p>You&rsquo;ve been playing a competitive online game for a while. You notice that rating is relatively stagnant, but you&rsquo;d like to reach the next level, and then take a break. This is a common engagement pattern for players, as seen in e.g. <a href="https://lichess.org/stat/rating/distribution/blitz">Chess</a> or <a href="https://www.opendota.com/distributions">Dota 2</a> Ideally you&rsquo;d like to do so in a way that doesn&rsquo;t require you to get better at the game, because that seems hard. In this post we&rsquo;ll investigate how many games it&rsquo;ll take for you to hit that next level purely by random chance.</p>
+<!-- raw HTML omitted -->
+<h2 id="random-walks-of-ratings">Random Walks of Ratings</h2>
+<p>We saw in a <a href="https://adamvenis.github.io/2021/11/03/how-accurate-is-your-rating.html">previous post</a> that in the Elo rating system, ratings will randomly fluctuate around their intended value. On average they&rsquo;ll be about 30 points off, but we can also try to calculate a different question: if I want to reach, say, 50 rating points above my true value, how many games will I expect to have to play for that to happen by random chance?</p>
+<p>In stochastic process theory, this is called a <a href="https://en.wikipedia.org/wiki/Hitting_time">hitting time</a> problem. We want to calculate $$\tau(0, n)$$, the time starting from $$0$$ to hit a point $$n$$ steps in the positive direction. As in the previous post, we&rsquo;ll calculate this first using a fast-and-dirty Monte Carlo method, and then try to solve it with more sophisticated tools.</p>
+<h2 id="monte-carlo-simulation">Monte Carlo Simulation</h2>
+<p>Calculating $$\tau(0, n)$$ with Monte Carlo simulation essentially amounts to converting the stochastic process into code, running it for a bunch of trials, and averaging the results. This is what that looks like:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> random
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">p_win</span>(n):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">/</span> (<span style="color:#ae81ff">1</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">10</span> <span style="color:#f92672">**</span> (n <span style="color:#f92672">/</span> <span style="color:#ae81ff">50</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">p_loss</span>(n):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">-</span> p_win(n)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">monte_carlo_hitting_time</span>(n, num_trials<span style="color:#f92672">=</span><span style="color:#ae81ff">100</span>):
+</span></span><span style="display:flex;"><span>    total_steps <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> _ <span style="color:#f92672">in</span> range(num_trials):
+</span></span><span style="display:flex;"><span>        steps <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>        current_position <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span> current_position <span style="color:#f92672">&lt;</span> n:
+</span></span><span style="display:flex;"><span>            current_position <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">if</span> random<span style="color:#f92672">.</span>random() <span style="color:#f92672">&lt;</span> p_win(current_position) <span style="color:#66d9ef">else</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>            steps <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        total_steps <span style="color:#f92672">+=</span> steps
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> total_steps <span style="color:#f92672">/</span> num_trials
+</span></span></code></pre></div><p>Because we&rsquo;re working with the Elo rating system with a standard $$k$$-factor of 16, the value of $$n$$ represents the number of net wins that we&rsquo;d like to reach. Each win is worth 8 rating points, so to hit 50 rating points above our true skill, we&rsquo;d need 7 net wins.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span> monte_carlo_hitting_time(<span style="color:#ae81ff">7</span>)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">214.94</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span> monte_carlo_hitting_time(<span style="color:#ae81ff">7</span>)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">192.84</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span> monte_carlo_hitting_time(<span style="color:#ae81ff">7</span>)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">177.02</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span> monte_carlo_hitting_time(<span style="color:#ae81ff">7</span>, num_trials<span style="color:#f92672">=</span><span style="color:#ae81ff">100_000</span>)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">200.27782</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span> monte_carlo_hitting_time(<span style="color:#ae81ff">7</span>, num_trials<span style="color:#f92672">=</span><span style="color:#ae81ff">100_000</span>)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">200.41436</span>
+</span></span></code></pre></div><p>Notice that this method produces pretty significant variance for 100 trials, but works well enough for 100,000 trials. This runs in about 9 seconds on my computer. 200 is a lot of games to just get 7 net wins though! Let plot the distribution of how many games this actually takes:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> collections
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> matplotlib.pyplot <span style="color:#66d9ef">as</span> plt
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">monte_carlo_hitting_time_distribution</span>(n, num_trials<span style="color:#f92672">=</span><span style="color:#ae81ff">100</span>):
+</span></span><span style="display:flex;"><span>    steps_counter <span style="color:#f92672">=</span> collections<span style="color:#f92672">.</span>Counter()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> _ <span style="color:#f92672">in</span> range(num_trials):
+</span></span><span style="display:flex;"><span>        steps <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>        current_position <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span> current_position <span style="color:#f92672">&lt;</span> n:
+</span></span><span style="display:flex;"><span>            current_position <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">if</span> random<span style="color:#f92672">.</span>random() <span style="color:#f92672">&lt;</span> p_win(current_position) <span style="color:#66d9ef">else</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>            steps <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        steps_counter[steps] <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> steps_counter
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>num_trials <span style="color:#f92672">=</span> <span style="color:#ae81ff">100000</span>
+</span></span><span style="display:flex;"><span>steps_distribution <span style="color:#f92672">=</span> monte_carlo_hitting_time_distribution(<span style="color:#ae81ff">7</span>, num_trials)
+</span></span><span style="display:flex;"><span>steps_distribution <span style="color:#f92672">=</span> sorted([(k, v <span style="color:#f92672">/</span> num_trials) <span style="color:#66d9ef">for</span> k, v <span style="color:#f92672">in</span> steps_distribution<span style="color:#f92672">.</span>items()])
+</span></span><span style="display:flex;"><span>plt<span style="color:#f92672">.</span>plot(<span style="color:#f92672">*</span>list(zip(<span style="color:#f92672">*</span>steps_distribution)))
+</span></span><span style="display:flex;"><span>plt<span style="color:#f92672">.</span>show()
+</span></span></code></pre></div><!-- raw HTML omitted -->
+<h2 id="faster-and-more-accurate-computation">Faster and more accurate computation</h2>
+<p>Now we try to simplify the problem to see if we can solve it faster and more accurately. Borrowing the notation from the previous post, let $$S^*$$ be the Markov Chain representing the dynamics of one&rsquo;s rating changing over time. For a generic Markov Chain the formula for $$\tau(x, y)$$, the expected time to first reach state $$y$$ starting from state $$x$$, is:</p>
+<p>$$
+\tau(x, y) =
+\begin{cases}
+0 &amp;\ \text{if } x = y \
+1 + \sum_{z \in S^*} A_{x,z} \tau(z, y) &amp; \text{ otherwise } \
+\end{cases}
+$$</p>
+<p>We&rsquo;re working with a specific type of Markov Chain, so we use a simpler formula. If we&rsquo;re starting at state $$0$$ and want to reach state $$n$$, we&rsquo;ll need to reach state $$n-1$$ first, before then proceeding to $$n$$. So $$\tau(0, n) = \tau(0, n-1) + \tau(n-1, n)$$. Now, before reaching $$n-1$$ we must reach $$n-2$$, and so on, which gives the formula:</p>
+<p>$$\tau(0, n) = \sum_{k=0}^{n-1} \tau(k, k+1)$$</p>
+<p>Now it remains to reduce $$\tau(k, k+1)$$ further. For this we can use the fact that the only nonzero transitions out of state $$k$$ are $$k-1$$ and $$k+1$$. Referencing the first formula:</p>
+<p>$$
+\begin{align*}
+\tau(k, k+1) &amp;= 1 + \sum_{z \in S^<em>} A_{x, z} \tau(z, y) \
+&amp;= 1 + A_{k, k+1} \tau(k+1, k+1) + A_{k, k-1} \tau(k-1, k+1) \
+&amp;= 1 + A_{k, k-1} (\tau(k-1, k) + \tau(k, k+1)) \
+(1 - A_{k, k-1}) \tau(k, k+1) &amp;= 1 + A_{k, k-1} \tau(k-1, k) \
+\tau(k, k+1) &amp;= \frac{1 + A_{k, k-1} \tau(k-1, k)}{(1 - A_{k, k-1})}
+\end{align</em>}
+$$</p>
+<p>At this point, we&rsquo;ve established a recursive formula for $$\tau(k, k+1)$$. To test the formula, we can implement it in code and see if the results agree with our Monte Carlo simulation. Notice that we have to put a limit on the recursion, since our states include all of $$\mathbb{Z}$$, so if we ran this formula as described the program would never terminate. When the limit is a sufficiently large negative number, the probability of taking a step in the negative direction - aka losing a game - is negligible so we can round it to 0.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">recursive_hitting_time</span>(n, limit):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> sum(recursive_stepping_time(k, limit) <span style="color:#66d9ef">for</span> k <span style="color:#f92672">in</span> range(n))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">recursive_stepping_time</span>(k, limit):
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># time to get from state k to k+1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> k <span style="color:#f92672">==</span> limit:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> (<span style="color:#ae81ff">1</span> <span style="color:#f92672">+</span> p_loss(k) <span style="color:#f92672">*</span> recursive_stepping_time(k <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>, limit)) <span style="color:#f92672">/</span> p_win(k)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span> recursive_hitting_time(<span style="color:#ae81ff">7</span>, limit<span style="color:#f92672">=-</span><span style="color:#ae81ff">1000</span>)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">200.01670103012418</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span> recursive_hitting_time(<span style="color:#ae81ff">7</span>, limit<span style="color:#f92672">=-</span><span style="color:#ae81ff">40</span>)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">200.01670103012418</span>
+</span></span></code></pre></div><p>For limits below -40 we can see that the error is less than machine epsilon. Our answer agrees with the Monte Carlo answer, so we can be pretty confident that our derivation was correct. Also, this code runs in less than 1 millisecond, so we got a speedup of over 9000 over the Monte Carlo method. It&rsquo;s good progress, but ideally we could express the answer directly in a closed form. We can in fact do better if we get our hands dirty and make a sacrifice to the algebra gods:</p>
+<p>$$
+\begin{align*}
+\tau(k, k+1) &amp;= \frac{1 + A_{k, k-1} \tau(k-1, k)}{(1 - A_{k, k-1})} \
+\tau(k, k+1) &amp;= \frac{1}{(1 - A_{k, k-1})} + \frac{A_{k, k-1}}{(1 - A_{k, k-1})} \tau(k-1, k) \
+\end{align*}
+$$</p>
+<p>Recall that $$A_{k, k-1} = \frac{1}{1 + 10^{-k/50}}$$, so letting $$\alpha = 10^{1/50}$$ we get</p>
+<p>$$\frac{1}{(1 - A_{k, k-1})} = 1 + \alpha^k $$</p>
+<p>and</p>
+<p>$$\frac{A_{k, k-1}}{(1 - A_{k, k-1})} = \alpha^k $$</p>
+<p>Using this we now unroll the recursive formula, with the base case assumption that $$\tau(-L, -L+1) \approx 1$$ for a sufficiently large limit $$L$$.</p>
+<p>$$
+\begin{align*}
+\tau(k, k+1) &amp;= 1 + \alpha^k + \alpha^k \tau(k-1, k) \
+&amp;= 1 + \alpha^k + \alpha^k (1 + \alpha^{k-1} + \alpha^{k-1} \tau(k-2, k-1)) \
+&amp;= 1 + \alpha^k + \alpha^k + \alpha^{k + (k-1)} + \alpha^{k + (k-1)} + \alpha^{k + (k-1) + (k-2)} + \cdots + 1 \
+&amp;= 1 + 2 \left( \alpha^k + \alpha^{k + (k-1)} + \alpha^{k + (k-1) + \cdots} + 1 \right) \
+&amp;= 1 + 2 \left( \sum_{m=0}^L \alpha^{(\sum_{i=k-m}^k i)} \right) \
+&amp;= 1 + 2 \left( \sum_{m=1}^L \alpha^{(m (k + 1) - \frac{m(m+1)}{2})} \right) \
+&amp;= 1 + 2 \left( \sum_{m=1}^L \alpha^{(m k - \frac{(m - 1)m}{2})} \right)
+\end{align*}
+$$</p>
+<p>Again we check our work with code:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">iterative_hitting_time</span>(n, limit):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> sum(iterative_stepping_time(k, limit) <span style="color:#66d9ef">for</span> k <span style="color:#f92672">in</span> range(n))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">iterative_stepping_time</span>(k, limit):
+</span></span><span style="display:flex;"><span>    alpha <span style="color:#f92672">=</span> <span style="color:#ae81ff">10</span> <span style="color:#f92672">**</span> (<span style="color:#ae81ff">1</span> <span style="color:#f92672">/</span> <span style="color:#ae81ff">50</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">*</span> sum(alpha <span style="color:#f92672">**</span> (m <span style="color:#f92672">*</span> k <span style="color:#f92672">-</span> ((m <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>) <span style="color:#f92672">*</span> m) <span style="color:#f92672">/</span> <span style="color:#ae81ff">2</span>) <span style="color:#66d9ef">for</span> m <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">1</span>, <span style="color:#f92672">-</span>limit))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span> iterative_hitting_time(<span style="color:#ae81ff">7</span>, limit<span style="color:#f92672">=-</span><span style="color:#ae81ff">40</span>)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">200.0167010300768</span>
+</span></span></code></pre></div><p>We now have a formula that sums $$O(n^2)$$ terms. With even more work we can reduce this to $$O(n)$$:</p>
+<p>$$
+\begin{align*}
+\tau(0, n) &amp;= \sum_{k=0}^{n-1} \tau(k, k+1) \
+&amp;= \sum_{k=0}^{n-1} \left(1 + 2 \left( \sum_{m=1}^L \alpha^{(m k - \frac{(m - 1)m}{2})} \right) \right) \
+&amp;= n + 2 \left( \sum_{k=0}^{n-1} \sum_{m=1}^L \alpha^{(m k - \frac{(m - 1)m}{2})} \right) \
+&amp;= n + 2 \left( \sum_{m=1}^L \sum_{k=0}^{n-1} \alpha^{(m k - \frac{(m - 1)m}{2})} \right) \
+&amp;= n + 2 \left( \sum_{m=1}^L \alpha^{- \frac{(m - 1)m}{2}}\sum_{k=0}^{n-1} (\alpha^{m})^{k} \right) \
+&amp;= n + 2 \left( \sum_{m=1}^L \alpha^{- \frac{(m - 1)m}{2}} \frac{\alpha^{mn} - 1}{\alpha^m - 1} \right) \
+\end{align*}
+$$</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">analytic_hitting_time</span>(n, limit):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> n <span style="color:#f92672">+</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">*</span> sum(a <span style="color:#f92672">**</span> (<span style="color:#f92672">-</span> (m <span style="color:#f92672">*</span> (m <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>)) <span style="color:#f92672">/</span> <span style="color:#ae81ff">2</span>) <span style="color:#f92672">*</span> (a <span style="color:#f92672">**</span> (m <span style="color:#f92672">*</span> n) <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>) <span style="color:#f92672">/</span> (a <span style="color:#f92672">**</span> m <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>)  <span style="color:#66d9ef">for</span> m <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">1</span>, <span style="color:#f92672">-</span>limit))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span> analytic_hitting_time(<span style="color:#ae81ff">7</span>, limit<span style="color:#f92672">=-</span><span style="color:#ae81ff">40</span>)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">200.0167010300768</span>
+</span></span></code></pre></div><p>Unfortunately for the same reason as the previous post, the sum of a theta function has no closed form so we won&rsquo;t be able to reduce it further, but this is still significant progress over the previous versions. On my computer <code>recursive_hitting_time(7, limit=-40)</code> runs in 263μs, <code>iterative_hitting_time(7, limit=-40)</code> runs in 80.6μs, and <code>analytic_hitting_time(7, limit=-40)</code> runs in 25μs. Not bad for a more accurate and 360,000x faster calculation than the Monte Carlo simulation.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>We found that if you try to reach a rating 50 points above where you belong, it will take you 200 games on average, but after 64 games you&rsquo;ll have succeeded with 50% probability. We first calculated this directly via Monte Carlo simulation, and then calculated it again with a more accurate analytic derivation. I hope you learned something! Until next time&hellip;</p>
+
+  
+
+
+  </main>
+  <footer>
+    <p>Copyright 2024. All rights reserved.</p>
+
+  </footer>
+</body>
+</html>

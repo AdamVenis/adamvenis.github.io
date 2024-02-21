@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>How Accurate is Your Rating? | My New Hugo Site</title>
+
+    <link rel="stylesheet" href="/css/main.css">
+
+
+      <script src="/js/main.js"></script>
+
+
+</head>
+<body>
+  <header>
+    <h1>My New Hugo Site</h1>
+
+  <nav>
+    <ul>
+    <li>
+      <a href="/">Home</a>
+    </li>
+    <li>
+      <a href="/posts/">Posts</a>
+    </li>
+    <li>
+      <a href="/tags/">Tags</a>
+    </li>
+    </ul>
+  </nav>
+
+
+  </header>
+  <main>
+    
+  <h1>How Accurate is Your Rating?</h1>
+
+  
+  
+  <time datetime="0001-01-01T00:00:00&#43;00:00">January 1, 1</time>
+
+  <p>You&rsquo;re playing a competitive online team game. You notice that your teammates seem to be underperforming, and can&rsquo;t help but wonder why. Are they <a href="https://www.sciencedirect.com/science/article/pii/S1875952120301014">boosted</a>? Are they just having a bad game? Has their rating not converged yet? Has their rating been artificially inflated because they happened to win several of their most recent games? In this post we analyze and quantify the likelihood of this last possibility.</p>
+<h2 id="skill-ratings">Skill Ratings</h2>
+<p>Skill rating systems like <a href="https://en.wikipedia.org/wiki/Elo_rating_system">Elo</a> are commonly used in games to represent each player&rsquo;s skill level with a number. A rating is considered accurate if it can be used, together with various formulas, to accurately predict the outcomes of games. Before a player has played any games, they are given a provisional rating which will likely not be very accurate. As they play more games, the system updates its estimates, and eventually converges on a rating that is fairly close to optimal. With the Elo system, this convergence period generally lasts for several dozen games. More modern systems like <a href="https://en.wikipedia.org/wiki/Glicko_rating_system">Glicko</a> and <a href="https://en.wikipedia.org/wiki/TrueSkill">TrueSkill</a> use more sophisticated statistical techniques, and they can converge in half as many games as Elo or less.</p>
+<p>Once a player&rsquo;s rating has converged on their true skill, the rating itself will continue to fluctuate around that value as more games are played. The question we address in this post is: what are the magnitudes of these fluctuations? On average, how accurate is the rating of a player who has passed the convergence period?</p>
+<h2 id="how-accurate-is-your-rating">How Accurate is Your Rating?</h2>
+<p>To state our question formally, we&rsquo;ll need some assumptions. We&rsquo;ll use the Elo system, which gives us a simple way to sample outcomes of games between two players by using the prescribed formula. We also assume that at any rating the matchmaker will give you an opponent that is perfectly matched for you. This is often pretty close to the truth in online video games, especially more popular games with larger player populations.</p>
+<p>With this setup, a player&rsquo;s rating over time can be modelled as a random walk around their true rating. With a typical K-factor of 16 and perfect matchmaking, a win will increase the rating by exactly 8 points, and a loss will decrease it by exactly 8 points. Therefore, letting $$r_0$$ be the true rating, the random walk has discrete support over the state set $${r_0 + 8k, k \in \mathbb{Z}}$$. For simplicity we&rsquo;ll identify these states with the integers, so ratings of $${r_0 - 16, r_0 - 8, r_0, r_0 + 8, r_0 + 16}$$ will be represented by states $${-2, -1, 0, 1, 2}$$.</p>
+<!-- raw HTML omitted -->
+<p>The probabilities associated with moving left and right in this random walk depend on which state we&rsquo;re in, which is different from the prototypical unbiased setting for random walks. This makes sense for rating systems though; it should be more likely that you take a step towards your true rating than away from it. Let $$A$$ be the matrix of transition probabilities where $$A_{i,j}$$ is the probability of transitioning from state $$i$$ to state $$j$$. Then by the Elo formula,</p>
+<p>$$
+A_{i, j} =
+\begin{cases}
+0 &amp;\ \text{if } |i-j| \neq 1 \
+\frac{1}{1 + 10^{\left( \frac{-8(i-j)}{400} \right) }} &amp; \text{if } i &lt; j \leq 0 \text{ or } i &gt; j \geq 0 \
+\frac{1}{1 + 10^{\left( \frac{8(i-j)}{400} \right)}}       &amp; \text{if } j &lt; i \leq 0 \text{ or } j &gt; i \geq 0 \
+\end{cases}
+$$</p>
+<p>The second case here is a number slightly above $$0.5$$ for moving towards your true rating, and the third case is slightly below $$0.5$$ for moving away from your true rating.</p>
+<p>The Markov Chain associated to this random walk has a steady state distribution. The formalized question is now: for the Markov Chain with transition probabilities described above, what is the average distance from the $$0$$ state, when averaged over its steady state distribution? Put another way, what is the Mean Absolute Error (MAE) of a player&rsquo;s converged rating?</p>
+<h2 id="monte-carlo-solution">Monte Carlo Solution</h2>
+<p>The simplest approach to measuring the average error is using Monte Carlo simulation. Essentially we simulate many games using our model, collect the results, and empirically measure the average error. The code and plots for this approach look like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> collections
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> random
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> matplotlib.pyplot <span style="color:#66d9ef">as</span> plt
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>K <span style="color:#f92672">=</span> <span style="color:#ae81ff">16</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">expected_winrate</span>(a, b):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">/</span> (<span style="color:#ae81ff">1</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">10</span><span style="color:#f92672">**</span>((b <span style="color:#f92672">-</span> a) <span style="color:#f92672">/</span> <span style="color:#ae81ff">400</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">rating_delta</span>(a, b, a_win):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> K <span style="color:#f92672">*</span> (a_win <span style="color:#f92672">-</span> expected_winrate(a, b))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">monte_carlo</span>(steps):
+</span></span><span style="display:flex;"><span>    true_rating <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    visits <span style="color:#f92672">=</span> collections<span style="color:#f92672">.</span>defaultdict(int)
+</span></span><span style="display:flex;"><span>    current_rating <span style="color:#f92672">=</span> true_rating
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> _ <span style="color:#f92672">in</span> range(steps):
+</span></span><span style="display:flex;"><span>        visits[current_rating] <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        a_win <span style="color:#f92672">=</span> random<span style="color:#f92672">.</span>random() <span style="color:#f92672">&lt;</span> expected_winrate(true_rating, current_rating)
+</span></span><span style="display:flex;"><span>        current_rating <span style="color:#f92672">+=</span> rating_delta(current_rating, current_rating, a_win)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> {k: v <span style="color:#f92672">/</span> steps <span style="color:#66d9ef">for</span> k, v <span style="color:#f92672">in</span> visits<span style="color:#f92672">.</span>items()}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">plot</span>(visits, <span style="color:#f92672">**</span>kwargs):
+</span></span><span style="display:flex;"><span>    plt<span style="color:#f92672">.</span>plot(<span style="color:#f92672">*</span>zip(<span style="color:#f92672">*</span>sorted(visits<span style="color:#f92672">.</span>items())), <span style="color:#f92672">**</span>kwargs)
+</span></span><span style="display:flex;"><span>    mae <span style="color:#f92672">=</span> sum(abs(k)<span style="color:#f92672">*</span>v <span style="color:#66d9ef">for</span> k, v <span style="color:#f92672">in</span> visits<span style="color:#f92672">.</span>items())
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Mean Average Error: </span><span style="color:#e6db74">{</span>mae<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">show_plots</span>():
+</span></span><span style="display:flex;"><span>    plt<span style="color:#f92672">.</span>legend()
+</span></span><span style="display:flex;"><span>    plt<span style="color:#f92672">.</span>xlabel(<span style="color:#e6db74">&#39;rating&#39;</span>)
+</span></span><span style="display:flex;"><span>    plt<span style="color:#f92672">.</span>ylabel(<span style="color:#e6db74">&#39;probability&#39;</span>)
+</span></span><span style="display:flex;"><span>    plt<span style="color:#f92672">.</span>show()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span> plot(monte_carlo(<span style="color:#ae81ff">10</span><span style="color:#f92672">**</span><span style="color:#ae81ff">3</span>), color<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;red&#39;</span>)
+</span></span><span style="display:flex;"><span>Mean Average Error: <span style="color:#ae81ff">26.64000000000002</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span> plot(monte_carlo(<span style="color:#ae81ff">10</span><span style="color:#f92672">**</span><span style="color:#ae81ff">5</span>), color<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;blue&#39;</span>)
+</span></span><span style="display:flex;"><span>Mean Average Error: <span style="color:#ae81ff">29.72592000000098</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span> plot(monte_carlo(<span style="color:#ae81ff">10</span><span style="color:#f92672">**</span><span style="color:#ae81ff">7</span>), color<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;green&#39;</span>)
+</span></span><span style="display:flex;"><span>Mean Average Error: <span style="color:#ae81ff">29.845985600157935</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span> show_plots()
+</span></span></code></pre></div><!-- raw HTML omitted -->
+<p>There will be a slight bias towards smaller MAE since this simulation starts exactly at the true rating, but it seems to be dominated by simulation variance because the MAE shown is slightly increasing as the number of simulation steps increase.</p>
+<p>So there you have it, on average your rating will be about 30 points away from what it should be. All things considered, that&rsquo;s not too far off! With the same procedure we can also look at some quantiles: the 50th percentile error is 24, the 80th is 40, and the 95th is 56.</p>
+<h2 id="analytic-solution">Analytic Solution</h2>
+<p>The Monte Carlo solution is decent, but it&rsquo;d be great to get a more accurate answer, and ideally an exact answer. We&rsquo;re trying to find the mean absolute error, which we could calculate directly if we knew the steady state distribution of the Markov Chain we constructed. The standard technique to find such a steady state distribution uses linear algebra to solve for $$Av=v$$, but our Markov Chain has infinitely many states, so that won&rsquo;t work. Fortunately we can still make progress by using some clever techniques.</p>
+<h3 id="proposition">Proposition</h3>
+<p>Let $$M$$ be a finite-state Markov Chain on $$n$$ states, with transition matrix $$A$$, and steady state distribution $$S$$. Now let $$G(V, E)$$ be the undirected graph induced by $$M$$, where $$V = S$$ and $$E = {(u, v) \mid \ u, v \in V, u \neq v, A_{u,v} \neq 0\ \textit{or} \ A_{v,u} \neq 0 }$$. If $$G$$ is acyclic, then:</p>
+<p>$$A_{u,v} S_u = A_{v,u} S_v \ \ \ \forall u, v \in M&rsquo;$$</p>
+<h3 id="proof">Proof</h3>
+<p>We can assume $$G$$ is connected without loss of generality, as otherwise we could apply same logic to each of the connected components without any issues. Now we proceed by induction on $$\mid M \mid$$, the number of states in $$M$$. If $$\mid M \mid$$ $$= 1$$, $$G$$ has no edges so the proposition is vacuously true. Otherwise $$G$$ has some vertex $$x$$ with degree 1, that is connected to another vertex $$y$$. Now by the definition of a steady state, $$S(x) = \sum_{y} A_{y, x} S(y)$$, but in this case the right hand side only has two nonzero terms:</p>
+<p>$$S(x) = A_{x,x} S(x) + A_{y,x} S(y) = \frac{A_{y,x}}{1 - A_{x,x}} S(y)$$</p>
+<p>Since $$A$$ is a stochastic matrix, $$\sum_{y} A_{x,y} = 1$$, so $$A_{x,x} = 1 - A_{x,y}$$, and we get:</p>
+<p>$$S(x) = \frac{A_{y,x}}{A_{x,y}} S(y)$$</p>
+<p>Therefore the proposition holds at the edge $$(x, y)$$. By the inductive hypothesis it also holds for all edges in $$G \setminus {x}$$ which is also acyclic. Since $$x$$ has degree 1, this covers all the edges in $$G$$, so the proposition holds, QED.</p>
+<p>Now we&rsquo;ll assume that a steady state exists. Let $$S^<em>$$ be the steady state distribution of $$M&rsquo;$$, i.e. a function that assigns probabilities to states in $$M&rsquo;$$ such that $$\sum_{x \in M&rsquo;} S^</em>(x) = 1$$. Then let $$S$$ be another function with the same signature defined by $$S(x) = \frac{S^<em>(x)}{S^</em>(0)}$$ be an unnormalized function of the same sort, scaled so that $$S(0) = 1$$.</p>
+<p>We&rsquo;ll use this construction to iteratively solve for $$S(1)$$, and then $$S(2)$$, and so on. Notice that $$M$$ satisfies the assumptions of the proposition: it is a line, so it is certainly acyclic. Technically $$M$$ has infinitely many states and the proposition was for finitely many states, but if we squint a little and apply the technique anyways, we can still make progress. So applying the proposition gives:</p>
+<p>$$S(1) = \frac{A_{0, 1}}{A_{1, 0}} S(0) = \frac{A_{0, 1}}{A_{1, 0}} \cdot 1 = \frac{1}{\left( \frac{1}{1 + 10^{\left( \frac{-8}{400} \right)}} \right)} = 1 + 10^{\left( \frac{-8}{400} \right)} \cong 1.955$$</p>
+<p>It makes sense for $$S(1)$$ to be a bit under $$2$$ (while $$S(0) = 1$$), because recall we sandwiched two states into one for $$S(1)$$, each which will have a bit less weight than $$S(0)$$ which did not come from two states. For clarity, let&rsquo;s call $$\alpha = 10^{\left( \frac{8}{400} \right)}$$. Then $$S(1) = 1 + \alpha^{-1}$$. Similarly let&rsquo;s calculate $$S(2)$$:</p>
+<p>$$S(2) = \frac{A_{1, 2}}{A_{2, 1}} S(1) = \frac{\left( \frac{1}{1 + 10^{\left( \frac{8}{400} \right)}} \right) }{ \left( \frac{1}{1 + 10^{\left( \frac{-16}{400} \right)}} \right) } S(1) = \frac{1 + 10^{\left( \frac{-16}{400} \right)}}{1 + 10^{\left( \frac{8}{400} \right)}} S(1) = \frac{1 + \alpha^{-2}}{1 + \alpha} (1 + \alpha^{-1})$$</p>
+<p>&hellip;</p>
+<p>$$S(k) = \frac{A_{k-1, k}}{A_{k, k-1}} S(k-1) = \frac{ \left( \frac{1}{1 + \alpha^{k-1}} \right) }{ \left( \frac{1}{1 + \alpha^{-k}} \right) } S(k-1) = \frac{1 + \alpha^{-k}}{1 + \alpha^{k-1}} S(k-1)$$</p>
+<p>Now we can expand the consecutive ratios all the way back to $$S(1)$$:</p>
+<p>$$
+\begin{align*}
+S(k)
+&amp;= \frac{1 + \alpha^{-k}}{1 + \alpha^{k-1}} S(k-1)
+= \frac{1 + \alpha^{-k}}{1 + \alpha^{k-1}} \left( \frac{1 + \alpha^{-(k-1)}}{1 + \alpha^{k-2}} S(k-2) \right) \
+&amp;=  \frac{(1 + \alpha^{-k})}{(1 + \alpha^{k-1})} \frac{(1 + \alpha^{-(k-1)})}{(1 + \alpha^{k-2})} \cdots \frac{(1 + \alpha^{-2})}{(1 + \alpha)} (1 + \alpha^{-1})
+\end{align*}$$</p>
+<p>And finally collapse them, noting that $$\frac{1 + \alpha^{-k}}{1 + \alpha^k} = \alpha^{-k}$$:</p>
+<p>$$
+\begin{align*}
+S(k)
+&amp;=  (1 + \alpha^{-k}) \frac{(1 + \alpha^{-(k-1)})}{(1 + \alpha^{k-1})} \frac{(1 + \alpha^{-(k-2)})}{(1 + \alpha^{k-2})} \cdots \frac{(1 + \alpha^{-1})}{(1 + \alpha)} \
+&amp;= (1 + \alpha^{-k}) \alpha^{-(k-1)} \alpha^{-(k-2)} \cdots \alpha^{-1} \
+&amp;= \frac{1 + \alpha^{-k}}{\alpha^{\frac{k(k-1)}{2}}} \
+&amp;= \alpha^{\frac{-k(k-1)}{2}} + \alpha^{\frac{-k(k+1)}{2}}
+\end{align*}$$</p>
+<p>What a beautiful simplification! Now let&rsquo;s clean up and summarize what we&rsquo;ve done. We solved for $$S(k)$$ for all $$k \in \mathbb{N}$$, but remember that $$S$$ is only proportional to the steady state distribution $$S^*$$. To renormalize, we need to divide by the sum $$T = \sum_{k \in \mathbb{N}} S(k)$$ to find the scaled version of $$S$$ that is an actual probability distribution. This is an infinite sum, but at first glance it resembles a geometric series so we might hope to use an identity like $$\sum_{k \in \mathbb{N}} \alpha^k = \frac{1}{1-\alpha}$$ to find a closed form. Unfortunately, $$T$$ is actually a <a href="https://en.wikipedia.org/wiki/Theta_function">Theta function</a> that is known to have no closed form. So close, yet so far.</p>
+<p>At least we can approximate $$T$$ astronomically more efficiently than the Monte Carlo approach, with the following code:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>alpha <span style="color:#f92672">=</span> <span style="color:#ae81ff">10</span><span style="color:#f92672">**</span>(<span style="color:#ae81ff">8</span><span style="color:#f92672">/</span><span style="color:#ae81ff">400</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">T</span>(upper_bound):
+</span></span><span style="display:flex;"><span>    result <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> k <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">1</span>, upper_bound):
+</span></span><span style="display:flex;"><span>        result <span style="color:#f92672">+=</span> alpha<span style="color:#f92672">**</span>(<span style="color:#f92672">-</span>k<span style="color:#f92672">*</span>(k<span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>)<span style="color:#f92672">/</span><span style="color:#ae81ff">2</span>) <span style="color:#f92672">+</span> alpha<span style="color:#f92672">**</span>(<span style="color:#f92672">-</span>k<span style="color:#f92672">*</span>(k<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)<span style="color:#f92672">/</span><span style="color:#ae81ff">2</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> result
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span> print(T(<span style="color:#ae81ff">1000</span>))
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">11.748085322402272</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span> print(T(<span style="color:#ae81ff">40</span>))
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">11.748085322402272</span>
+</span></span></code></pre></div><p>As we can see, for values of $$k$$ above 40, the cumulative value of $$T$$ changes by less than <a href="https://en.wikipedia.org/wiki/Machine_epsilon">machine epsilon</a> and is therefore imperceptible. Now let&rsquo;s sanity check our math by comparing it to the Monte Carlo approach:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">S</span>(k):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> (alpha<span style="color:#f92672">**</span>(<span style="color:#f92672">-</span>k<span style="color:#f92672">*</span>(k<span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>)<span style="color:#f92672">/</span><span style="color:#ae81ff">2</span>) <span style="color:#f92672">+</span> alpha<span style="color:#f92672">**</span>(<span style="color:#f92672">-</span>k<span style="color:#f92672">*</span>(k<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)<span style="color:#f92672">/</span><span style="color:#ae81ff">2</span>)) <span style="color:#f92672">/</span> T(<span style="color:#ae81ff">40</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">analytic</span>(window):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> {<span style="color:#ae81ff">8</span> <span style="color:#f92672">*</span> i: S(i) <span style="color:#f92672">/</span> <span style="color:#ae81ff">2</span> <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(<span style="color:#f92672">-</span>window, window <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>)}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span> plot(monte_carlo(<span style="color:#ae81ff">10</span><span style="color:#f92672">**</span><span style="color:#ae81ff">7</span>), color<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;blue&#39;</span>, label<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;monte carlo&#39;</span>)
+</span></span><span style="display:flex;"><span>Mean Average Error: <span style="color:#ae81ff">29.818871999999995</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span> plot(analytic(<span style="color:#ae81ff">40</span>), color<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;red&#39;</span>, label<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;analytic&#39;</span>)
+</span></span><span style="display:flex;"><span>Mean Average Error: <span style="color:#ae81ff">29.80184236053276</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span> show_plots()
+</span></span></code></pre></div><!-- raw HTML omitted -->
+<p>So it looks like the Monte Carlo estimate is ~0.017 off, and it runs in 7s compared to 200μs for the analytic solution (3000x speedup).</p>
+<p>In summary, we found that on average, ratings prescribed by the Elo system will be inaccurate by around 30 points. We first calculated this with a crude but direct Monte Carlo simulation, and then calculated it again with a more complicated but accurate analytic derivation. I hope you learned something! Until next time&hellip;</p>
+
+  
+
+
+  </main>
+  <footer>
+    <p>Copyright 2024. All rights reserved.</p>
+
+  </footer>
+</body>
+</html>

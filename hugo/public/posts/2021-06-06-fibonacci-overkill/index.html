@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>Fibonacci Overkill | My New Hugo Site</title>
+
+    <link rel="stylesheet" href="/css/main.css">
+
+
+      <script src="/js/main.js"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+
+<script>hljs.highlightAll();</script>
+</head>
+<body>
+  <header>
+    <h1>My New Hugo Site</h1>
+
+  <nav>
+    <ul>
+    <li>
+      <a href="/">Home</a>
+    </li>
+    <li>
+      <a aria-current="true" class="ancestor" href="/posts/">Posts</a>
+    </li>
+    <li>
+      <a href="/tags/">Tags</a>
+    </li>
+    </ul>
+  </nav>
+
+
+  </header>
+  <main>
+    
+  <h1>Fibonacci Overkill</h1>
+
+  
+  
+  <time datetime="0001-01-01T00:00:00&#43;00:00">January 1, 1</time>
+
+  <p>Let&rsquo;s try to find a fast solution to Project Euler&rsquo;s <a href="https://projecteuler.net/problem=2">Problem 2</a>, which asks us to find the sum of the even-valued Fibonacci numbers that do not exceed four million. This is a beginner-level problem. After getting past the hump of realizing that Fibonacci numbers need to be cached/memoized/dynamic programming&rsquo;d, a typical python solution might look like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> timeit
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">P2</span>(limit <span style="color:#f92672">=</span> <span style="color:#ae81ff">4</span><span style="color:#f92672">*</span><span style="color:#ae81ff">10</span><span style="color:#f92672">**</span><span style="color:#ae81ff">6</span>):
+</span></span><span style="display:flex;"><span>    fibs <span style="color:#f92672">=</span> [<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> fibs[<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>] <span style="color:#f92672">+</span> fibs[<span style="color:#f92672">-</span><span style="color:#ae81ff">2</span>] <span style="color:#f92672">&lt;</span> limit:
+</span></span><span style="display:flex;"><span>        fibs<span style="color:#f92672">.</span>append(fibs[<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>] <span style="color:#f92672">+</span> fibs[<span style="color:#f92672">-</span><span style="color:#ae81ff">2</span>])
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> sum(x <span style="color:#66d9ef">for</span> x <span style="color:#f92672">in</span> fibs <span style="color:#66d9ef">if</span> x <span style="color:#f92672">%</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>num_trials, total_time <span style="color:#f92672">=</span> timeit<span style="color:#f92672">.</span>Timer(<span style="color:#e6db74">&#39;P2()&#39;</span>, globals<span style="color:#f92672">=</span>globals())<span style="color:#f92672">.</span>autorange()
+</span></span><span style="display:flex;"><span>print(total_time <span style="color:#f92672">/</span> num_trials)
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span> <span style="color:#ae81ff">7.327787560000161e-06</span>
+</span></span></code></pre></div><p>Not bad! It already only takes 7.3μs, but let&rsquo;s try to do better. As an amusing side note, the naive recursive solution without caching takes ~4s on my laptop, so we&rsquo;re already over 500,000x faster.</p>
+<hr>
+<h2 id="remove-the-list">Remove the list</h2>
+<p>Allocating a list is slow and unnecessary, since at any point we only need to access the last two values in the list. Let&rsquo;s save only the last two values and see how it goes:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> timeit
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">P2_no_list</span>(limit <span style="color:#f92672">=</span> <span style="color:#ae81ff">4</span><span style="color:#f92672">*</span><span style="color:#ae81ff">10</span><span style="color:#f92672">**</span><span style="color:#ae81ff">6</span>):
+</span></span><span style="display:flex;"><span>    previous_value, current_value, total <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> current_value <span style="color:#f92672">&lt;</span> limit:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> current_value <span style="color:#f92672">%</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>:
+</span></span><span style="display:flex;"><span>            total <span style="color:#f92672">+=</span> current_value
+</span></span><span style="display:flex;"><span>        previous_value, current_value <span style="color:#f92672">=</span> current_value, current_value <span style="color:#f92672">+</span> previous_value
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> total
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>num_trials, total_time <span style="color:#f92672">=</span> timeit<span style="color:#f92672">.</span>Timer(<span style="color:#e6db74">&#39;P2_no_list()&#39;</span>, globals<span style="color:#f92672">=</span>globals())<span style="color:#f92672">.</span>autorange()
+</span></span><span style="display:flex;"><span>print(total_time <span style="color:#f92672">/</span> num_trials)
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span> <span style="color:#ae81ff">2.8692420399999996e-06</span>
+</span></span></code></pre></div><p>About three times faster!</p>
+<hr>
+<h2 id="remove-the-odd-valued-terms">Remove the odd valued terms</h2>
+<p>Take a look at where the even values are situated in the Fibonacci sequence:</p>
+<p>1, 1, <strong>2</strong>, 3, 5, <strong>8</strong>, 13, 21, <strong>34</strong>, &hellip;</p>
+<p>It seems like every third term is even. This isn&rsquo;t a coincidence. Since the Fibonacci sequence is a linear recurrence, the sequence of remainders when dividing each term by any fixed number will be periodic (homework: prove this!). With this recurrence $$F_n = F_{n-1} + F_{n-2}$$, the pattern of odd and even numbers will be <code>Odd, Odd, Even, Odd, Odd, Even, Odd, Odd, Even, ...</code>, since <code>Odd + Odd = Even</code> and <code>Odd + Even = Odd</code>.</p>
+<p>Using that information, we can try to come up with a way to compute the even terms while ignoring the odd terms completely. Expanding out the definition of the sequence:</p>
+<p>$$\begin{align*}
+F_n &amp;= F_{n-1} + F_{n-2} \
+&amp;= (F_{n-2} + F_{n-3}) + (F_{n-3} + F_{n-4}) \
+&amp;= ((F_{n-3} + F_{n-4}) + F_{n-3}) + (F_{n-3} + F_{n-4}) \
+&amp;= 3F_{n-3} + 2F_{n-4} \
+&amp;= 3F_{n-3} + F_{n-4} + (F_{n-5} + F_{n-6}) \
+&amp;= 3F_{n-3} + (F_{n-4} + F_{n-5}) + F_{n-6} \
+&amp;= 4F_{n-3} + F_{n-6} \
+\end{align*}$$</p>
+<p>Now if we let $$G_n := F_{3n}$$, we get $$G_n = 4G_{n-1} + G_{n-2}$$ with $$G_0 = 0$$ and $$G_1 = 2$$, a perfectly good recurrence that exactly captures the even terms in the fibonacci sequence!</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> timeit
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">P2_no_odd_terms</span>(limit <span style="color:#f92672">=</span> <span style="color:#ae81ff">4</span><span style="color:#f92672">*</span><span style="color:#ae81ff">10</span><span style="color:#f92672">**</span><span style="color:#ae81ff">6</span>):
+</span></span><span style="display:flex;"><span>    previous_value, current_value, total <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> current_value <span style="color:#f92672">&lt;</span> limit:
+</span></span><span style="display:flex;"><span>        total <span style="color:#f92672">+=</span> current_value
+</span></span><span style="display:flex;"><span>        previous_value, current_value <span style="color:#f92672">=</span> current_value, <span style="color:#ae81ff">4</span> <span style="color:#f92672">*</span> current_value <span style="color:#f92672">+</span> previous_value
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> total
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>num_trials, total_time <span style="color:#f92672">=</span> timeit<span style="color:#f92672">.</span>Timer(<span style="color:#e6db74">&#39;P2_no_odd_terms()&#39;</span>, globals<span style="color:#f92672">=</span>globals())<span style="color:#f92672">.</span>autorange()
+</span></span><span style="display:flex;"><span>print(total_time <span style="color:#f92672">/</span> num_trials)
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span> <span style="color:#ae81ff">1.1106692099999993e-06</span>
+</span></span></code></pre></div><p>Another almost 3x speedup!</p>
+<hr>
+<h2 id="remove-the-accumulator">Remove the accumulator</h2>
+<p>There is an identity $$\sum_{i=0}^n F_i = F_{n+2} - 1$$ that expresses the sum of fibonacci numbers in terms of a single value. Let&rsquo;s prove this, and then maybe we can come up with a similar formula for the even terms:</p>
+<p>$$\begin{align*}
+F_n &amp;= F_{n+2} - F_{n+1} \
+\sum_{i=0}^n F_i &amp;= \sum_{i=0}^n F_{i+2} - \sum_{i=0}^n F_{i+1} \
+&amp;= F_{n+2} - F_1 \
+&amp;= F_{n+2} - 1 \
+\end{align*}$$</p>
+<p>By telescoping the sum on the right hand side. So we should be able to do the same with $$G_n$$:</p>
+<p>$$\begin{align*}
+G_n &amp;= G_{n+2} - 4G_{n+1} \
+\sum_{i=0}^n G_i &amp;= \sum_{i=0}^n G_{i+2} - 4 \sum_{i=0}^n G_{i+1} \
+&amp;= G_{n+2} - 3 \sum_{i=0}^n G_{i+1} - G_1\
+&amp;= G_{n+2} - 3 G_{n+1} - 2 - 3 \sum_{i=0}^n G_i \
+4 \sum_{i=0}^n G_i &amp;= G_{n+2} - 3 G_{n+1} - 2 \
+\sum_{i=0}^n G_i &amp;= \frac{1}{4} (G_{n+2} - 3 G_{n+1} - 2) \
+&amp;= \frac{1}{4} (G_{n+1} + G_n - 2) \
+\end{align*}$$</p>
+<p>Where the last substitution uses the recurrence definition of $$G_n$$. So we can rewrite our function without using an accumulator at all!</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> timeit
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">P2_no_accumulator</span>(limit <span style="color:#f92672">=</span> <span style="color:#ae81ff">4</span><span style="color:#f92672">*</span><span style="color:#ae81ff">10</span><span style="color:#f92672">**</span><span style="color:#ae81ff">6</span>):
+</span></span><span style="display:flex;"><span>    previous_value, current_value <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> current_value <span style="color:#f92672">&lt;</span> limit:
+</span></span><span style="display:flex;"><span>        previous_value, current_value <span style="color:#f92672">=</span> current_value, (<span style="color:#ae81ff">4</span> <span style="color:#f92672">*</span> current_value) <span style="color:#f92672">+</span> previous_value
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> (previous_value <span style="color:#f92672">+</span> current_value <span style="color:#f92672">-</span> <span style="color:#ae81ff">2</span>) <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>num_trials, total_time <span style="color:#f92672">=</span> timeit<span style="color:#f92672">.</span>Timer(<span style="color:#e6db74">&#39;P2_no_accumulator()&#39;</span>, globals<span style="color:#f92672">=</span>globals())<span style="color:#f92672">.</span>autorange()
+</span></span><span style="display:flex;"><span>print(total_time <span style="color:#f92672">/</span> num_trials)
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span> <span style="color:#ae81ff">9.136303600025712e-07</span>
+</span></span></code></pre></div><p>Another 1.2x speedup.</p>
+<p>On this note, there&rsquo;s another Fibonacci identity that can save us some time. Notice that we&rsquo;re adding every third term, each of which is equal to the sum of the two preceding terms. This means that adding <strong>all</strong> the terms should give us double the result we want. E.g.:</p>
+<p><!-- raw HTML omitted -->2 + 8 + 34 = 44<!-- raw HTML omitted --></p>
+<p><!-- raw HTML omitted -->1 + 1<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->+ 2<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->+ 3 + 5<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->+ 8<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->+ 13 + 21<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->+ 34<!-- raw HTML omitted --> = 88 = 2 × 44</p>
+<p>Now we can leverage the formula we saw before for summing usual Fibonacci sequences:
+$$\sum_{i=0}^n G_i = \sum_{i=0}^n F_{3i} = \frac{1}{2} \sum_{i=0}^{3n} F_i = \frac{1}{2} (F_{3n+2} - 1)$$
+We can calculate $$H_n = F_{3n+2}$$ using the same recurrence for $$G_n$$, but now with initial conditions $$H_0 = F_2 = 1$$ and $$H_1 = F_5 = 5$$. Now our function looks like:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> timeit
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">P2_no_accumulator_2</span>(limit <span style="color:#f92672">=</span> <span style="color:#ae81ff">4</span><span style="color:#f92672">*</span><span style="color:#ae81ff">10</span><span style="color:#f92672">**</span><span style="color:#ae81ff">6</span>):
+</span></span><span style="display:flex;"><span>    previous_value, current_value <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">5</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> current_value <span style="color:#f92672">&lt;</span> limit:
+</span></span><span style="display:flex;"><span>        previous_value, current_value <span style="color:#f92672">=</span> current_value, (<span style="color:#ae81ff">4</span> <span style="color:#f92672">*</span> current_value) <span style="color:#f92672">+</span> previous_value
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> current_value <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>num_trials, total_time <span style="color:#f92672">=</span> timeit<span style="color:#f92672">.</span>Timer(<span style="color:#e6db74">&#39;P2_no_accumulator_2()&#39;</span>, globals<span style="color:#f92672">=</span>globals())<span style="color:#f92672">.</span>autorange()
+</span></span><span style="display:flex;"><span>print(total_time <span style="color:#f92672">/</span> num_trials)
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span> <span style="color:#ae81ff">8.271025819994975e-07</span>
+</span></span></code></pre></div><p>A mild 1.1x speedup.</p>
+<hr>
+<h2 id="remove-the-loop">Remove the loop?</h2>
+<p>The hardest thing to tackle is removing the loop entirely, which is why we save it for last. Now that our problem amounts to calculating one or two terms in the Fibonacci sequence, why not use <a href="https://en.wikipedia.org/wiki/Fibonacci_number#Closed-form_expression">Binet&rsquo;s Formula</a> to calculate it directly instead of looping? Well for one, that formula requires knowing which index in the sequence we want to calculate, whereas we&rsquo;re looking for the largest term that doesn&rsquo;t exceed a specified limit. There are two options I see here: calculate the index directly first using a logarithm, or use something like <a href="https://en.wikipedia.org/wiki/Interpolation_search">Interpolation Search</a> to find the right term by trial and error. A problem with the logarithm approach is that it uses floating point arithmetic, so it is succeptible to rounding errors for sufficiently large limits. In my testing, at around limit=$$10^{14}$$ this approach started giving wrong answers, making it overall pretty undesirable. Omitting some of the algebra details, my attempt looks like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> timeit
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">P2_logarithm</span>(limit<span style="color:#f92672">=</span><span style="color:#ae81ff">4</span><span style="color:#f92672">*</span><span style="color:#ae81ff">10</span><span style="color:#f92672">**</span><span style="color:#ae81ff">6</span>):
+</span></span><span style="display:flex;"><span>    index <span style="color:#f92672">=</span> int(math<span style="color:#f92672">.</span>log(limit <span style="color:#f92672">*</span> math<span style="color:#f92672">.</span>sqrt(<span style="color:#ae81ff">5</span>), <span style="color:#ae81ff">2</span> <span style="color:#f92672">+</span> math<span style="color:#f92672">.</span>sqrt(<span style="color:#ae81ff">5</span>))) <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> round(((<span style="color:#ae81ff">2</span> <span style="color:#f92672">+</span> math<span style="color:#f92672">.</span>sqrt(<span style="color:#ae81ff">5</span>))<span style="color:#f92672">**</span>index <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>) <span style="color:#f92672">/</span> (<span style="color:#ae81ff">5</span> <span style="color:#f92672">+</span> math<span style="color:#f92672">.</span>sqrt(<span style="color:#ae81ff">5</span>)))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>num_trials, total_time <span style="color:#f92672">=</span> timeit<span style="color:#f92672">.</span>Timer(<span style="color:#e6db74">&#39;P2_logarithm()&#39;</span>, globals<span style="color:#f92672">=</span>globals())<span style="color:#f92672">.</span>autorange()
+</span></span><span style="display:flex;"><span>print(total_time <span style="color:#f92672">/</span> num_trials)
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span> <span style="color:#ae81ff">8.342724520043703e-07</span>
+</span></span></code></pre></div><p>Slightly slower, and untrustworthy for larger limits. It is the most concise solution though, which at least makes us look clever :).</p>
+<p>For interpolation search, first we need to understand a matrix identity using Fibonacci numbers:</p>
+<h1 id="endbmatrix">$$
+\begin{bmatrix}
+F_{n+1} &amp; F_{n} \
+F_{n} &amp; F_{n-1}
+\end{bmatrix}</h1>
+<h1 id="endbmatrix-1">\begin{bmatrix}
+1 &amp; 1\
+1 &amp; 0
+\end{bmatrix}
+\begin{bmatrix}
+F_{n} &amp; F_{n-1} \
+F_{n-1} &amp; F_{n-2}
+\end{bmatrix}</h1>
+<h1 id="endbmatrix-2">\begin{bmatrix}
+1 &amp; 1\
+1 &amp; 0
+\end{bmatrix}^{n-1}
+\begin{bmatrix}
+F_2 &amp; F_1 \
+F_1 &amp; F_0
+\end{bmatrix}</h1>
+<h1 id="endbmatrix-3">\begin{bmatrix}
+1 &amp; 1\
+1 &amp; 0
+\end{bmatrix}^{n-1}
+\begin{bmatrix}
+1 &amp; 1\
+1 &amp; 0
+\end{bmatrix}</h1>
+<p>\begin{bmatrix}
+1 &amp; 1\
+1 &amp; 0
+\end{bmatrix}^n
+=:
+A^n
+$$</p>
+<p>This can be seen by just multiplying the matrices through and using the recurrence relation of the Fibonacci numbers. What this means is that we can calculate $$F_n$$ by calculating $$A^n$$ and looking at its entries. This is fortunate because we can use repeated squaring to calculate $$A^n$$ in $$O(\log(n))$$ operations, hopefully saving us some time. Since we don&rsquo;t know exactly what $$n$$ is ahead of time, our algorithm will need to repeatedly square powers of $$A$$ until exceeding the limit, and then back off and repeat. This will take $$O(\log(n)^2)$$ operations, which should still eventually be faster than the previous algorithm which took $$O(n)$$. Finally, after finding the largest $$F_n$$ smaller than the limit, we&rsquo;ll need to do a bit of case work to find the largest $$F_{3k+2}$$ smaller than the limit. This looks like:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> numpy <span style="color:#66d9ef">as</span> np
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> timeit
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">P2_squaring</span>(limit <span style="color:#f92672">=</span> <span style="color:#ae81ff">4</span><span style="color:#f92672">*</span><span style="color:#ae81ff">10</span><span style="color:#f92672">**</span><span style="color:#ae81ff">6</span>):
+</span></span><span style="display:flex;"><span>  A <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>array([[<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>], [<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>]])
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">while</span> A[<span style="color:#ae81ff">0</span>][<span style="color:#ae81ff">0</span>] <span style="color:#f92672">&lt;</span> limit:
+</span></span><span style="display:flex;"><span>    B <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>array([[<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>], [<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>]])
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> <span style="color:#66d9ef">True</span>:
+</span></span><span style="display:flex;"><span>      B_squared <span style="color:#f92672">=</span> B <span style="color:#f92672">@</span> B
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (A <span style="color:#f92672">@</span> B_squared)[<span style="color:#ae81ff">0</span>][<span style="color:#ae81ff">1</span>] <span style="color:#f92672">&gt;</span> limit:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">break</span>
+</span></span><span style="display:flex;"><span>      B <span style="color:#f92672">=</span> B_squared
+</span></span><span style="display:flex;"><span>    A <span style="color:#f92672">=</span> A <span style="color:#f92672">@</span> B
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> A[<span style="color:#ae81ff">0</span>][<span style="color:#ae81ff">0</span>] <span style="color:#f92672">%</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> (<span style="color:#ae81ff">2</span> <span style="color:#f92672">*</span> A[<span style="color:#ae81ff">0</span>][<span style="color:#ae81ff">0</span>] <span style="color:#f92672">+</span> A[<span style="color:#ae81ff">0</span>][<span style="color:#ae81ff">1</span>] <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>) <span style="color:#f92672">//</span> <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">elif</span> A[<span style="color:#ae81ff">0</span>][<span style="color:#ae81ff">1</span>] <span style="color:#f92672">%</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> (A[<span style="color:#ae81ff">0</span>][<span style="color:#ae81ff">0</span>] <span style="color:#f92672">+</span> A[<span style="color:#ae81ff">0</span>][<span style="color:#ae81ff">1</span>] <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>) <span style="color:#f92672">//</span> <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> (A[<span style="color:#ae81ff">0</span>][<span style="color:#ae81ff">0</span>] <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>) <span style="color:#f92672">//</span> <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>num_trials, total_time <span style="color:#f92672">=</span> timeit<span style="color:#f92672">.</span>Timer(<span style="color:#e6db74">&#39;P2_squaring()&#39;</span>, globals<span style="color:#f92672">=</span>globals())<span style="color:#f92672">.</span>autorange()
+</span></span><span style="display:flex;"><span>print(total_time <span style="color:#f92672">/</span> num_trials)
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span> <span style="color:#ae81ff">2.4940721999155356e-05</span>
+</span></span></code></pre></div><p>Much slower, because numpy has a bunch of overhead for multiplying matrices. Now don&rsquo;t look at the following code, which is the same algorithm with matrix multiplication done barehand, because it&rsquo;s atrocious:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">P2_squaring_optimized</span>(limit <span style="color:#f92672">=</span> <span style="color:#ae81ff">4</span><span style="color:#f92672">*</span><span style="color:#ae81ff">10</span><span style="color:#f92672">**</span><span style="color:#ae81ff">6</span>):
+</span></span><span style="display:flex;"><span>  a, b, c <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">while</span> a <span style="color:#f92672">&lt;</span> limit:
+</span></span><span style="display:flex;"><span>    x, y, z <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> <span style="color:#66d9ef">True</span>:
+</span></span><span style="display:flex;"><span>      tx, ty, tz <span style="color:#f92672">=</span> x <span style="color:#f92672">*</span> x <span style="color:#f92672">+</span> y <span style="color:#f92672">*</span> y, x <span style="color:#f92672">*</span> y <span style="color:#f92672">+</span> y <span style="color:#f92672">*</span> z, y <span style="color:#f92672">*</span> y <span style="color:#f92672">+</span> z <span style="color:#f92672">*</span> z
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> a <span style="color:#f92672">*</span> ty <span style="color:#f92672">+</span> b <span style="color:#f92672">*</span> tz <span style="color:#f92672">&gt;</span> limit:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">break</span>
+</span></span><span style="display:flex;"><span>      x, y, z <span style="color:#f92672">=</span> tx, ty, tz
+</span></span><span style="display:flex;"><span>    a, b, c <span style="color:#f92672">=</span> a <span style="color:#f92672">*</span> x <span style="color:#f92672">+</span> b <span style="color:#f92672">*</span> y, a <span style="color:#f92672">*</span> y <span style="color:#f92672">+</span> b <span style="color:#f92672">*</span> z, b <span style="color:#f92672">*</span> y <span style="color:#f92672">+</span> c <span style="color:#f92672">*</span> z
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> a <span style="color:#f92672">%</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> a <span style="color:#f92672">+</span> (b <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">elif</span> b <span style="color:#f92672">%</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> (a <span style="color:#f92672">+</span> b) <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> a <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>num_trials, total_time <span style="color:#f92672">=</span> timeit<span style="color:#f92672">.</span>Timer(<span style="color:#e6db74">&#39;P2_squaring_optimized()&#39;</span>, globals<span style="color:#f92672">=</span>globals())<span style="color:#f92672">.</span>autorange()
+</span></span><span style="display:flex;"><span>print(total_time <span style="color:#f92672">/</span> num_trials)
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span><span style="color:#ae81ff">2.9668219599989244e-06</span>
+</span></span></code></pre></div><p>So we get an order of magnitude speedup, but still 3x slower than our previous attempts. This is because while we&rsquo;ve improved the asymptotic complexity, our constant overhead has become worse, and the actual $$n$$ is small. What we would expect is that as we increase the limit, this squaring function will eventually get faster than our previous attempts. Let&rsquo;s check the runtime at a few different limits, plotted on a log-log plot:</p>
+<!-- raw HTML omitted -->
+<p>It looks like our new algorithm eventually gets faster for limits above $$10^{80}$$, so it takes quite a while. Not what we hoped for, but at least now we know.</p>
+<h2 id="closing-thoughts">Closing thoughts</h2>
+<p>We got about a 9x overall speedup from the naive dynamic programming solution for this problem by using a variety of clever ideas and tools. Of course we could get a massive speedup by just not using Python, but the purpose of this post was to demonstrate conceptual optimizations so that&rsquo;s less important. There&rsquo;s also some beautiful theory using generating functions that provides a deeper understanding to a lot of this stuff. We chose to do things in a more elementary way here to be more direct.</p>
+<p>Until next time&hellip;</p>
+
+  
+
+
+  </main>
+  <footer>
+    <p>Copyright 2024. All rights reserved.</p>
+
+  </footer>
+</body>
+</html>

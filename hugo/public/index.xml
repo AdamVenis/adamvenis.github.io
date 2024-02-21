@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Home on My New Hugo Site</title>
+    <link>http://localhost:1313/</link>
+    <description>Recent content in Home on My New Hugo Site</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 15 Mar 2023 11:00:00 -0700</lastBuildDate>
+    <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Post 3</title>
+      <link>http://localhost:1313/posts/post-3/</link>
+      <pubDate>Wed, 15 Mar 2023 11:00:00 -0700</pubDate>
+      <guid>http://localhost:1313/posts/post-3/</guid>
+      <description>Occaecat aliqua consequat laborum ut ex aute aliqua culpa quis irure esse magna dolore quis. Proident fugiat labore eu laboris officia Lorem enim. Ipsum occaecat cillum ut tempor id sint aliqua incididunt nisi incididunt reprehenderit. Voluptate ad minim sint est aute aliquip esse occaecat tempor officia qui sunt. Aute ex ipsum id ut in est velit est laborum incididunt. Aliqua qui id do esse sunt eiusmod id deserunt eu nostrud aute sit ipsum.</description>
+    </item>
+    <item>
+      <title>Post 2</title>
+      <link>http://localhost:1313/posts/post-2/</link>
+      <pubDate>Wed, 15 Feb 2023 10:00:00 -0700</pubDate>
+      <guid>http://localhost:1313/posts/post-2/</guid>
+      <description>Anim eiusmod irure incididunt sint cupidatat. Incididunt irure irure irure nisi ipsum do ut quis fugiat consectetur proident cupidatat incididunt cillum. Dolore voluptate occaecat qui mollit laborum ullamco et. Ipsum laboris officia anim laboris culpa eiusmod ex magna ex cupidatat anim ipsum aute. Mollit aliquip occaecat qui sunt velit ut cupidatat reprehenderit enim sunt laborum. Velit veniam in officia nulla adipisicing ut duis officia.&#xA;Exercitation voluptate irure in irure tempor mollit Lorem nostrud ad officia.</description>
+    </item>
+    <item>
+      <title>Post 1</title>
+      <link>http://localhost:1313/posts/post-1/</link>
+      <pubDate>Sun, 15 Jan 2023 09:00:00 -0700</pubDate>
+      <guid>http://localhost:1313/posts/post-1/</guid>
+      <description>Tempor proident minim aliquip reprehenderit dolor et ad anim Lorem duis sint eiusmod. Labore ut ea duis dolor. Incididunt consectetur proident qui occaecat incididunt do nisi Lorem. Tempor do laborum elit laboris excepteur eiusmod do. Eiusmod nisi excepteur ut amet pariatur adipisicing Lorem.&#xA;Occaecat nulla excepteur dolore excepteur duis eiusmod ullamco officia anim in voluptate ea occaecat officia. Cillum sint esse velit ea officia minim fugiat. Elit ea esse id aliquip pariatur cupidatat id duis minim incididunt ea ea.</description>
+    </item>
+    <item>
+      <title>Faster Bin Packing</title>
+      <link>http://localhost:1313/posts/2024-02-18-faster-bin-packing/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/posts/2024-02-18-faster-bin-packing/</guid>
+      <description>The Bin Packing Problem (BPP) is a classical algorithms problem in Computer Science. The problem is, given a collection of variable sized items and uniformly sized bins, to pick a bin for each item to be &amp;lsquo;packed&amp;rsquo; into, where the goal is to minimize the number of bins used. Bin packing is considered a fundamental problem due to its simplicity and that many other problems relate to it. It&amp;rsquo;s applied in real world areas like filling up shipping containers for supply chains, creating file backups in media, and technology mapping in FPGA semiconductor chip design.</description>
+    </item>
+    <item>
+      <title>Fibonacci Overkill</title>
+      <link>http://localhost:1313/posts/2021-06-06-fibonacci-overkill/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/posts/2021-06-06-fibonacci-overkill/</guid>
+      <description>Let&amp;rsquo;s try to find a fast solution to Project Euler&amp;rsquo;s Problem 2, which asks us to find the sum of the even-valued Fibonacci numbers that do not exceed four million. This is a beginner-level problem. After getting past the hump of realizing that Fibonacci numbers need to be cached/memoized/dynamic programming&amp;rsquo;d, a typical python solution might look like this:&#xA;import timeit def P2(limit = 4*10**6): fibs = [1, 1] while fibs[-1] + fibs[-2] &amp;lt; limit: fibs.</description>
+    </item>
+    <item>
+      <title>How Accurate is Your Rating?</title>
+      <link>http://localhost:1313/posts/2021-11-03-how-accurate-is-your-rating/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/posts/2021-11-03-how-accurate-is-your-rating/</guid>
+      <description>You&amp;rsquo;re playing a competitive online team game. You notice that your teammates seem to be underperforming, and can&amp;rsquo;t help but wonder why. Are they boosted? Are they just having a bad game? Has their rating not converged yet? Has their rating been artificially inflated because they happened to win several of their most recent games? In this post we analyze and quantify the likelihood of this last possibility.&#xA;Skill Ratings Skill rating systems like Elo are commonly used in games to represent each player&amp;rsquo;s skill level with a number.</description>
+    </item>
+    <item>
+      <title>How To Boost Your Rating</title>
+      <link>http://localhost:1313/posts/2022-01-25-how-to-boost-your-rating/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/posts/2022-01-25-how-to-boost-your-rating/</guid>
+      <description>You&amp;rsquo;ve been playing a competitive online game for a while. You notice that rating is relatively stagnant, but you&amp;rsquo;d like to reach the next level, and then take a break. This is a common engagement pattern for players, as seen in e.g. Chess or Dota 2 Ideally you&amp;rsquo;d like to do so in a way that doesn&amp;rsquo;t require you to get better at the game, because that seems hard. In this post we&amp;rsquo;ll investigate how many games it&amp;rsquo;ll take for you to hit that next level purely by random chance.</description>
+    </item>
+    <item>
+      <title>Making Estimates</title>
+      <link>http://localhost:1313/posts/2020-08-31-making-estimates/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/posts/2020-08-31-making-estimates/</guid>
+      <description>Suppose you find yourself repeatedly conducting an experiment that sometimes fails and sometimes succeeds. Suppose further that each iteration of the experiment is identical, and random chance is the only difference between success and failure. This is analogous to repeatedly flipping a biased coin, a coin that shows heads with a probability that isn&amp;rsquo;t necessarily 0.5 as it is for a usual coin.&#xA;Let $$p$$ be the unknown probability that your experiment succeeds.</description>
+    </item>
+  </channel>
+</rss>

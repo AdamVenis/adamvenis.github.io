@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>Making Estimates | My New Hugo Site</title>
+
+    <link rel="stylesheet" href="/css/main.css">
+
+
+      <script src="/js/main.js"></script>
+
+
+</head>
+<body>
+  <header>
+    <h1>My New Hugo Site</h1>
+
+  <nav>
+    <ul>
+    <li>
+      <a href="/">Home</a>
+    </li>
+    <li>
+      <a href="/posts/">Posts</a>
+    </li>
+    <li>
+      <a href="/tags/">Tags</a>
+    </li>
+    </ul>
+  </nav>
+
+
+  </header>
+  <main>
+    
+  <h1>Making Estimates</h1>
+
+  
+  
+  <time datetime="0001-01-01T00:00:00&#43;00:00">January 1, 1</time>
+
+  <p>Suppose you find yourself repeatedly conducting an experiment that sometimes fails and sometimes succeeds. Suppose further that each iteration of the experiment is identical, and random chance is the only difference between success and failure. This is analogous to repeatedly flipping a biased coin, a coin that shows heads with a probability that isn&rsquo;t necessarily 0.5 as it is for a usual coin.</p>
+<p>Let $$p$$ be the unknown probability that your experiment succeeds. You would like to know the true value of $$p$$, but the best you can do is estimate it based on the results of your experiments/coinflips.</p>
+<p>An Estimator is a scheme for coming up with such an estimate $$x$$, given a collection of observations. For example, say you&rsquo;ve flipped your coin 10 times and heads has come up 7 times. An intuitive estimate for $$p$$ would be $$x = 0.7$$. This estimator is called the <em>empirical mean</em>. Now it&rsquo;s possible that $$p$$&rsquo;s true value is actually 0.7, but it could also one of infinitely many other possible values, in which case your estimate would not be perfectly accurate. In these cases it makes sense to measure the degree of accuracy of your estimate. There are different ways to measure this accuracy. One way is to compute the difference between your estimate and the true value, i.e. $$\lvert x - p \rvert$$. We want this value to be 0, or at least as close to 0 as possible. Another measurement that&rsquo;s more commonly seen in statistics is the function $$(x - p)^2$$. The idea of squaring the difference is to further penalize larger differences. These functions are called <em>loss functions</em>, and the two examples given are known as <em>L1 loss</em> and <em>L2 loss</em> respectively.</p>
+<p>We can calculate the L2 loss: start with some underlying value for $$p$$, generate sample observations using $$p$$, use the estimator to generate an estimate $$x$$, and then check the value $$(x - p)^2$$. The following code and graph shows the L2 loss using the empirical mean estimator for different values of $$p$$.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> matplotlib
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> matplotlib.pyplot <span style="color:#66d9ef">as</span> plt
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> numpy <span style="color:#66d9ef">as</span> np
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">estimate_empirical_mean</span>(p, n):
+</span></span><span style="display:flex;"><span>    k <span style="color:#f92672">=</span> sum(np<span style="color:#f92672">.</span>random<span style="color:#f92672">.</span>random(size<span style="color:#f92672">=</span>n) <span style="color:#f92672">&lt;</span> p)
+</span></span><span style="display:flex;"><span>    x <span style="color:#f92672">=</span> k <span style="color:#f92672">/</span> n
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> (x <span style="color:#f92672">-</span> p) <span style="color:#f92672">**</span> <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ps <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>arange(<span style="color:#ae81ff">0.0</span>, <span style="color:#ae81ff">1.0</span>, <span style="color:#ae81ff">0.01</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>fig, ax <span style="color:#f92672">=</span> plt<span style="color:#f92672">.</span>subplots()
+</span></span><span style="display:flex;"><span>N <span style="color:#f92672">=</span> <span style="color:#ae81ff">100</span>
+</span></span><span style="display:flex;"><span>TRIALS <span style="color:#f92672">=</span> <span style="color:#ae81ff">1000</span>
+</span></span><span style="display:flex;"><span>ax<span style="color:#f92672">.</span>plot(ps, [N <span style="color:#f92672">*</span> sum(estimate_empirical_mean(p, N) <span style="color:#66d9ef">for</span> _ <span style="color:#f92672">in</span> range(TRIALS)) <span style="color:#f92672">/</span> TRIALS <span style="color:#66d9ef">for</span> p <span style="color:#f92672">in</span> ps], color<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;red&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ax<span style="color:#f92672">.</span>set(xlabel<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;parameter p&#39;</span>, ylabel<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;L2 Loss&#39;</span>)
+</span></span><span style="display:flex;"><span>ax<span style="color:#f92672">.</span>grid()
+</span></span><span style="display:flex;"><span>plt<span style="color:#f92672">.</span>show()
+</span></span></code></pre></div><!-- raw HTML omitted -->
+<p>We see that our estimates are generally less accurate when $$p$$ is closer to 0.5, and more accurate when $$p$$ is close to 0 or 1. If you want to make guarantees about the accuracy of your estimator, you would use the worst case value, which here is around 0.25. The surprising thing I&rsquo;d like to show in this post is that we can construct a new estimator that has a better guarantee than the empirical mean. Our new estimator will take the empirical mean estimate and move it slightly towards 0.5. This effectively &ldquo;trades off&rdquo; accuracy at the boundary values of $$p$$ for accuracy around the middle.</p>
+<p>Notice that this curve closely matches the parabola $$f(p) = p - p^2$$. In fact if we were to run infinitely many trials, this curve would converge to that parabola exactly. Said more formally, the parabola $$p - p^2$$ is the expected value of estimation error, denoted $$\mathbb{E}[(x - p)^2]$$. Let&rsquo;s work out the details to be sure.</p>
+<p>Recall the formula for expected value, that it is the sum over all outcomes of the function value at that outcome times the probability of that outcome. In our setting, an outcome is observing some $$k$$ heads after flipping a coin $$n$$ times, where $$0 \leq k \leq n$$ and $$x = \frac{k}{n}$$. Then by linearity of expectation we expand:</p>
+<p>$$\begin{align*}
+\mathbb{E}[(x-p)^2] &amp;= \mathbb{E}[(\frac{k}{n} - p)^2] \
+&amp;= \mathbb{E}[\frac{k^2}{n^2} - \frac{2pk}{n} + p^2] \
+&amp;= \frac{\mathbb{E}[k^2]}{n^2} - \frac{2p\mathbb{E}[k]}{n} + p^2 \
+\end{align*}$$</p>
+<p>We know that $$\mathbb{E}[k]$$ is the expectation of the binomial distribution so its value is $$np$$. $$\mathbb{E}[k^2]$$ is harder to calculate, but fortunately we know that the variance of the binomial distribution is $$np(1-p)$$ so we can use the formula for the variance $$\text{Var}[k] = \mathbb{E}[k^2] - \mathbb{E}[k]^2$$ to find that $$\mathbb{E}[k^2] = np(1-p) + \mathbb{E}[k]^2 = np(1-p) + n^2p^2$$. Now we can substitute and finish the algebra:</p>
+<p>$$\begin{align*}
+\mathbb{E}[(x-p)^2] &amp;= \frac{np(1-p) + n^2p^2}{n^2} - \frac{2p(np)}{n} + p^2 \
+&amp;= \frac{p(1-p)}{n} + p^2 - 2p^2 + p^2 \
+&amp;= \frac{p(1-p)}{n} \
+\end{align*}$$</p>
+<p>which exactly explains the graph! Whew, that was quite a bit of work.</p>
+<hr>
+<p>As an aside, since I&rsquo;m lazy, I&rsquo;d prefer to not have to do all this tedious algebra. Fortunately the python package sympy can work out the details for us! Here is the same algebra as above, using sympy:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> sympy
+</span></span><span style="display:flex;"><span>p, n, k <span style="color:#f92672">=</span> sympy<span style="color:#f92672">.</span>symbols(<span style="color:#e6db74">&#39;p n k&#39;</span>)
+</span></span><span style="display:flex;"><span>error <span style="color:#f92672">=</span> (k <span style="color:#f92672">/</span> n <span style="color:#f92672">-</span> p) <span style="color:#f92672">**</span> <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>print(error<span style="color:#f92672">.</span>expand()<span style="color:#f92672">.</span>subs(k <span style="color:#f92672">**</span> <span style="color:#ae81ff">2</span>, n <span style="color:#f92672">*</span> p <span style="color:#f92672">*</span> (<span style="color:#ae81ff">1</span> <span style="color:#f92672">-</span> p) <span style="color:#f92672">+</span> n <span style="color:#f92672">*</span> n <span style="color:#f92672">*</span> p <span style="color:#f92672">*</span> p)<span style="color:#f92672">.</span>subs(k, n <span style="color:#f92672">*</span> p)<span style="color:#f92672">.</span>simplify())
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span> <span style="color:#f92672">-</span>p<span style="color:#f92672">*</span>(p <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>)<span style="color:#f92672">/</span>n
+</span></span></code></pre></div><hr>
+<p>Now let&rsquo;s embark on the adventure of coming up with a new estimator that moves the empirical mean towards 0.5. Two questions remain: how should it move the estimate, and by how much? We&rsquo;ll tackle these two questions one at a time.</p>
+<p>There are two normal ways I know of for moving a value $$x$$ towards another value $$y$$. The first, most common one, is linear interpolation: $$(1-t)x + ty$$ for some $$0 \leq t \leq 1$$. $$t=0$$ gives you $$x$$, $$t=1$$ gives you $$y$$, and $$t=0.5$$ gives you the midpoint between $$x$$ and $$y$$. In our problem setting, the estimate would like $$(1-t)\frac{k}{n} + t\frac{1}{2}$$, where we would need to pick a particular value for $$t$$. In code we have:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">estimate_linear_interpolation</span>(p, t, n):
+</span></span><span style="display:flex;"><span>    k <span style="color:#f92672">=</span> sum(np<span style="color:#f92672">.</span>random<span style="color:#f92672">.</span>random(size<span style="color:#f92672">=</span>n) <span style="color:#f92672">&lt;</span> p)
+</span></span><span style="display:flex;"><span>    x <span style="color:#f92672">=</span> (<span style="color:#ae81ff">1</span> <span style="color:#f92672">-</span> t) <span style="color:#f92672">*</span> k <span style="color:#f92672">/</span> n <span style="color:#f92672">+</span> t <span style="color:#f92672">/</span> <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> (x <span style="color:#f92672">-</span> p) <span style="color:#f92672">**</span> <span style="color:#ae81ff">2</span>
+</span></span></code></pre></div><p>The second way I don&rsquo;t know a name for, so I&rsquo;d like to coin it as &ldquo;hyperbolic interpolation&rdquo;. If $$x=\frac{a}{b}$$ and $$y=\frac{c}{d}$$, then $$\frac{a+tc}{b+td}$$ lies between $$x$$ and $$y$$ for $$0 \leq t &lt; \infty$$. You can imagine how adjusting $$t$$ interpolates between the two values. This method is also inspired by Bayesian inference, as it matches the format of updating the Beta distribution, the conjugate prior for the binomial distribution. In our setting, this looks like $$\frac{k+t \cdot 1}{n+t \cdot 2}$$. In code we have:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">estimate_hyperbolic_interpolation</span>(p, t, n):
+</span></span><span style="display:flex;"><span>    k <span style="color:#f92672">=</span> sum(np<span style="color:#f92672">.</span>random<span style="color:#f92672">.</span>random(size<span style="color:#f92672">=</span>n) <span style="color:#f92672">&lt;</span> p)
+</span></span><span style="display:flex;"><span>    x <span style="color:#f92672">=</span> (k <span style="color:#f92672">+</span> t) <span style="color:#f92672">/</span> (n <span style="color:#f92672">+</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">*</span> t)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> (x <span style="color:#f92672">-</span> p) <span style="color:#f92672">**</span> <span style="color:#ae81ff">2</span>
+</span></span></code></pre></div><p>Now it&rsquo;s would normally be a lot of work to compute the optimal values of $$t$$ in both of these interpolation formats, so we&rsquo;ll use a trick to make things easier. Remember that we&rsquo;re trading off accuracy at boundary values of $$p$$ for accuracy around $$p=0.5$$. In fact, an optimal value of $$t$$ would yield a loss that&rsquo;s a constant function of $$p$$. The trick we&rsquo;ll use is to set $$t$$ to a value such that taking the derivative of the loss function with respect to $$p$$ is 0. We can use sympy to do the dirty work, so we don&rsquo;t have to.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">optimal_hyperbolic_interpolation</span>():
+</span></span><span style="display:flex;"><span>    p, n, k, t <span style="color:#f92672">=</span> sympy<span style="color:#f92672">.</span>symbols(<span style="color:#e6db74">&#39;p n k t&#39;</span>)
+</span></span><span style="display:flex;"><span>    error <span style="color:#f92672">=</span> ((k <span style="color:#f92672">+</span> t) <span style="color:#f92672">/</span> (n <span style="color:#f92672">+</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">*</span> t) <span style="color:#f92672">-</span> p) <span style="color:#f92672">**</span> <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>    error <span style="color:#f92672">=</span> (
+</span></span><span style="display:flex;"><span>        error<span style="color:#f92672">.</span>expand()
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">.</span>subs(k <span style="color:#f92672">**</span> <span style="color:#ae81ff">2</span>, n <span style="color:#f92672">*</span> p <span style="color:#f92672">*</span> (<span style="color:#ae81ff">1</span> <span style="color:#f92672">-</span> p) <span style="color:#f92672">+</span> n <span style="color:#f92672">*</span> n <span style="color:#f92672">*</span> p <span style="color:#f92672">*</span> p)
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">.</span>subs(k, n <span style="color:#f92672">*</span> p)
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">.</span>simplify()
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>    d_dp <span style="color:#f92672">=</span> sympy<span style="color:#f92672">.</span>diff(error, p)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> sympy<span style="color:#f92672">.</span>solve(d_dp, t)
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span> [sqrt(n)<span style="color:#f92672">/</span><span style="color:#ae81ff">2</span>, <span style="color:#f92672">-</span>sqrt(n)<span style="color:#f92672">/</span><span style="color:#ae81ff">2</span>]
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">optimal_linear_interpolation</span>():
+</span></span><span style="display:flex;"><span>    p, n, k, t <span style="color:#f92672">=</span> sympy<span style="color:#f92672">.</span>symbols(<span style="color:#e6db74">&#39;p n k t&#39;</span>)
+</span></span><span style="display:flex;"><span>    error <span style="color:#f92672">=</span> ((<span style="color:#ae81ff">1</span> <span style="color:#f92672">-</span> t) <span style="color:#f92672">*</span> k <span style="color:#f92672">/</span> n <span style="color:#f92672">+</span> t <span style="color:#f92672">/</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">-</span> p) <span style="color:#f92672">**</span> <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>    error <span style="color:#f92672">=</span> (
+</span></span><span style="display:flex;"><span>        error<span style="color:#f92672">.</span>expand()
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">.</span>subs(k <span style="color:#f92672">**</span> <span style="color:#ae81ff">2</span>, n <span style="color:#f92672">*</span> p <span style="color:#f92672">*</span> (<span style="color:#ae81ff">1</span> <span style="color:#f92672">-</span> p) <span style="color:#f92672">+</span> n <span style="color:#f92672">*</span> n <span style="color:#f92672">*</span> p <span style="color:#f92672">*</span> p)
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">.</span>subs(k, n <span style="color:#f92672">*</span> p)
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">.</span>simplify()
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>    d_dp <span style="color:#f92672">=</span> sympy<span style="color:#f92672">.</span>diff(error, p)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> sympy<span style="color:#f92672">.</span>solve(d_dp, t)
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span> [(sqrt(n) <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>)<span style="color:#f92672">/</span>(n <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>), <span style="color:#f92672">-</span>(sqrt(n) <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>)<span style="color:#f92672">/</span>(n <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>)]
+</span></span></code></pre></div><p>Now the positive roots of each approach are the feasible ones, so we take $$t$$ to be that value and graph the result.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> matplotlib
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> matplotlib.pyplot <span style="color:#66d9ef">as</span> plt
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> numpy <span style="color:#66d9ef">as</span> np
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ps <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>arange(<span style="color:#ae81ff">0.0</span>, <span style="color:#ae81ff">1.0</span>, <span style="color:#ae81ff">0.01</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>fig, ax <span style="color:#f92672">=</span> plt<span style="color:#f92672">.</span>subplots()
+</span></span><span style="display:flex;"><span>N <span style="color:#f92672">=</span> <span style="color:#ae81ff">100</span>
+</span></span><span style="display:flex;"><span>TRIALS <span style="color:#f92672">=</span> <span style="color:#ae81ff">1000</span>
+</span></span><span style="display:flex;"><span>ax<span style="color:#f92672">.</span>plot(ps, [N <span style="color:#f92672">*</span> sum(estimate_empirical_mean(p, N) <span style="color:#66d9ef">for</span> _ <span style="color:#f92672">in</span> range(TRIALS)) <span style="color:#f92672">/</span> TRIALS <span style="color:#66d9ef">for</span> p <span style="color:#f92672">in</span> ps], color<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;red&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>optimal_t <span style="color:#f92672">=</span> optimal_linear_interpolation()[<span style="color:#ae81ff">0</span>]  <span style="color:#75715e"># the positive value</span>
+</span></span><span style="display:flex;"><span>optimal_t <span style="color:#f92672">=</span> optimal_t<span style="color:#f92672">.</span>subs(list(optimal_t<span style="color:#f92672">.</span>free_symbols)[<span style="color:#ae81ff">0</span>], N)  <span style="color:#75715e"># convert from sympy expression to numeric value</span>
+</span></span><span style="display:flex;"><span>linear_interpolated_estimates <span style="color:#f92672">=</span> [N <span style="color:#f92672">*</span> sum(estimate_linear_interpolation(p, optimal_t, N) <span style="color:#66d9ef">for</span> _ <span style="color:#f92672">in</span> range(TRIALS)) <span style="color:#f92672">/</span> TRIALS <span style="color:#66d9ef">for</span> p <span style="color:#f92672">in</span> ps]
+</span></span><span style="display:flex;"><span>ax<span style="color:#f92672">.</span>plot(ps, linear_interpolated_estimates, color<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;green&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>optimal_t <span style="color:#f92672">=</span> optimal_hyperbolic_interpolation()[<span style="color:#ae81ff">1</span>]  <span style="color:#75715e"># the positive value</span>
+</span></span><span style="display:flex;"><span>optimal_t <span style="color:#f92672">=</span> optimal_t<span style="color:#f92672">.</span>subs(list(optimal_t<span style="color:#f92672">.</span>free_symbols)[<span style="color:#ae81ff">0</span>], N)  <span style="color:#75715e"># convert from sympy expression to numeric value</span>
+</span></span><span style="display:flex;"><span>hyperbolic_interpolated_estimates <span style="color:#f92672">=</span> [N <span style="color:#f92672">*</span> sum(estimate_hyperbolic_interpolation(p, optimal_t, N) <span style="color:#66d9ef">for</span> _ <span style="color:#f92672">in</span> range(TRIALS)) <span style="color:#f92672">/</span> TRIALS <span style="color:#66d9ef">for</span> p <span style="color:#f92672">in</span> ps]
+</span></span><span style="display:flex;"><span>ax<span style="color:#f92672">.</span>plot(ps, hyperbolic_interpolated_estimates, color<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;blue&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ax<span style="color:#f92672">.</span>set(xlabel<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;parameter p&#39;</span>, ylabel<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;L2 Loss&#39;</span>)
+</span></span><span style="display:flex;"><span>ax<span style="color:#f92672">.</span>grid()
+</span></span><span style="display:flex;"><span>plt<span style="color:#f92672">.</span>show()
+</span></span></code></pre></div><!-- raw HTML omitted -->
+<p>We did it! These modified estimators are mutually equivalent, and both have better worst case guarantees than the simple empirical mean.</p>
+<p>QED! Until next time&hellip;</p>
+<p>Sources:
+H. Steinhaus - The Problem of Estimation (<a href="https://projecteuclid.org/euclid.aoms/1177706876">https://projecteuclid.org/euclid.aoms/1177706876</a>)</p>
+
+  
+
+
+  </main>
+  <footer>
+    <p>Copyright 2024. All rights reserved.</p>
+
+  </footer>
+</body>
+</html>

@@ -3,6 +3,7 @@ title: "Faster Bin Packing"
 mathjax: true
 layout: post
 ---
+
 The Bin Packing Problem (BPP) is a classical algorithms problem in Computer Science. The problem is, given a collection of variable sized items and uniformly sized bins, to pick a bin for each item to be 'packed' into, where the goal is to minimize the number of bins used. Bin packing is considered a fundamental problem due to its simplicity and that many other problems relate to it. It's applied in real world areas like filling up shipping containers for supply chains, creating file backups in media, and technology mapping in FPGA semiconductor chip design. It is, however, an NP-complete problem, which means that there is no existing algorithm that can solve the problem quickly, and it is likely[link to P<>NP] to be impossible for such an algorithm to exist. This post will some of the best theoretical and practical approaches that have been discovered for fast bin packing.
 
 The classical BPP is formulated as an offline algorithm. This means that the algorithm is presented with a fully known set of items and tries to optimally rearrange them into bins. There is a variant called Online Bin Packing, where the algorithm views a single item at a time and incrementally makes an irrevocable decision to either pick an existing bin for it or open a new bin. Another key distinction is between exact and approximate algorithms. An exact algorithm, for a given input, will always return a (possibly non-unique) optimal solution, but may take a very long time to complete. An approximate algorithm, on the other hand, is not guaranteed to return an optimal solution, but will likely complete much more quickly. In a real-world scenario, depending on the tradeoffs for problem at hand, an approximate or online algorithm may be more appropriate. In this post we will only consider exact algorithms in the offline setting. 
@@ -12,6 +13,18 @@ The classical BPP is formulated as an offline algorithm. This means that the alg
 
 Benchmark:
 For all of the algorithms we list we're going to set $$B=100$$ and randomly generate weights for $$N$$ items in the range $$[1, B-1]$$. We'll measure the runtime of our algorithms for increasing values of $$N$$, until it gets so large that the algorithm takes unreasonable long to complete. A simple evaluation we'll use is: for some algorithm $$A$$, what's the largest number $$N$$ such that on average, $$A$$ solves problems of size $$N$$ in under one minute?
+
+
+{{< raw-html >}}
+<details>
+<pre><code class='language-python'>
+def hello_world():
+    print("Hello, world!")
+
+hello_world()
+</code></pre>
+</details>
+{{< /raw-html >}}
 
 ### 1. Brute Force ###
 Fundamentally, a solution to an instance of the BPP (we can refer to an instance as 'a BPP') is a function mapping $$N$$ items into used bins. We could conceivably iterate over all possible functions of that form, identify which ones are valid, i.e. does not overfill any bin, and among them select the one that uses the fewest bins. Since there are only $$N$$ items, there must be at most $$N$$ bins, so there are $$N^N$$ such functions. Below is some python code that does what we've described, and a graph showing how the runtime grows with input size.
@@ -49,8 +62,9 @@ We know, on average, that we're going to use a bit more than N/2 bins for our it
 As an aside, it's an interesting exercise to come up with the smallest BPP where DBF does not come up with the optimal answer. In this case let's say the bin capacity and item sizes must be integers, and define one BPP to be smaller than another if either it has fewer items, or has the same number of items and a smaller bin capacity. If you think you've found a minimal example, DM me on twitter about it!
 
 <details>
-    <summary>DBF Python Code</summary>
-<pre><code class="python">def pack_DBF(weights, B):
+    <summary>Decreasing Best Fit</summary>
+<div class="language-python">
+<pre><code>def pack_DBF(weights, B):
 weights = list(reversed(sorted(weights)))
 bins = []
 bin_weights = []
@@ -61,40 +75,43 @@ for w in weights:
         (i, v) for i, v in enumerate(bin_weights) if v <= weight_limit
     ]
     if eligible_bins:
-        max_bin_weight_index = max(eligible_bins, key=lambda x: x[1])[0]
-        bins[max_bin_weight_index].append(w)
-        bin_weights[max_bin_weight_index] += w
+        max_weight_bin_index = max(eligible_bins, key=lambda x: x[1])[0]
+        bins[max_weight_bin_index].append(w)
+        bin_weights[max_weight_bin_index] += w
     else:
         bins.append([w])
         bin_weights.append(w)
 
 return bins
 </code></pre>
+</div>
 </details>
 
 Now we can use the result from DBF to improve on our brute force algorithm
 
+{{< raw-html >}}
 <details>
-    <summary>Brute Force v2</summary>
-    
-    ```python
-    def pack_brute_force_v2(weights, B):
-        best_pack = None
-        N = len(weights)
-        H = len(pack_DBF(weights, B))
-        for bin_indexes in itertools.product(*[range(H)] * N):
-            pack = collections.defaultdict(list)
-            for item, bin_index in zip(weights, bin_indexes):
-                pack[bin_index].append(item)
+<summary>Brute Force v2</summary>  
 
-            if all(sum(b) <= B for b in pack.values()) and (
-                best_pack is None or len(pack) < len(best_pack)
-            ):
-                best_pack = list(pack.values())
-        return best_pack
-    ```
+```python
+def pack_brute_force_v2(weights, B):
+    best_pack = None
+    N = len(weights)
+    H = len(pack_DBF(weights, B))
+    for bin_indexes in itertools.product(*[range(H)] * N):
+        pack = collections.defaultdict(list)
+        for item, bin_index in zip(weights, bin_indexes):
+            pack[bin_index].append(item)
+
+        if all(sum(b) <= B for b in pack.values()) and (
+            best_pack is None or len(pack) < len(best_pack)
+        ):
+            best_pack = list(pack.values())
+    return best_pack
+```
+
 </details>
-
+{{< /raw-html >}}
 [TODO: include graph that shows improvement and text to summarize the improvement]
 
 ### 3. Using Search ###

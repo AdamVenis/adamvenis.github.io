@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>Faster Bin Packing | My New Hugo Site</title>
+
+    <link rel="stylesheet" href="/css/main.css">
+
+
+      <script src="/js/main.js"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+
+<script>hljs.highlightAll();</script>
+</head>
+<body>
+  <header>
+    <h1>My New Hugo Site</h1>
+
+  <nav>
+    <ul>
+    <li>
+      <a href="/">Home</a>
+    </li>
+    <li>
+      <a aria-current="true" class="ancestor" href="/posts/">Posts</a>
+    </li>
+    <li>
+      <a href="/tags/">Tags</a>
+    </li>
+    </ul>
+  </nav>
+
+
+  </header>
+  <main>
+    
+  <h1>Faster Bin Packing</h1>
+
+  
+  
+  <time datetime="0001-01-01T00:00:00&#43;00:00">January 1, 1</time>
+
+  <p>The Bin Packing Problem (BPP) is a classical algorithms problem in Computer Science. The problem is, given a collection of variable sized items and uniformly sized bins, to pick a bin for each item to be &lsquo;packed&rsquo; into, where the goal is to minimize the number of bins used. Bin packing is considered a fundamental problem due to its simplicity and that many other problems relate to it. It&rsquo;s applied in real world areas like filling up shipping containers for supply chains, creating file backups in media, and technology mapping in FPGA semiconductor chip design. It is, however, an NP-complete problem, which means that there is no existing algorithm that can solve the problem quickly, and it is likely[link to P&lt;&gt;NP] to be impossible for such an algorithm to exist. This post will some of the best theoretical and practical approaches that have been discovered for fast bin packing.</p>
+<p>The classical BPP is formulated as an offline algorithm. This means that the algorithm is presented with a fully known set of items and tries to optimally rearrange them into bins. There is a variant called Online Bin Packing, where the algorithm views a single item at a time and incrementally makes an irrevocable decision to either pick an existing bin for it or open a new bin. Another key distinction is between exact and approximate algorithms. An exact algorithm, for a given input, will always return a (possibly non-unique) optimal solution, but may take a very long time to complete. An approximate algorithm, on the other hand, is not guaranteed to return an optimal solution, but will likely complete much more quickly. In a real-world scenario, depending on the tradeoffs for problem at hand, an approximate or online algorithm may be more appropriate. In this post we will only consider exact algorithms in the offline setting.</p>
+<p>[insert some rationale on how we&rsquo;re going to start from the basics and successively introduce improvements]
+[insert a point that we&rsquo;re doing 1D bin packing, so we&rsquo;re representing items and bins by real numbers]</p>
+<p>Benchmark:
+For all of the algorithms we list we&rsquo;re going to set $$B=100$$ and randomly generate weights for $$N$$ items in the range $$[1, B-1]$$. We&rsquo;ll measure the runtime of our algorithms for increasing values of $$N$$, until it gets so large that the algorithm takes unreasonable long to complete. A simple evaluation we&rsquo;ll use is: for some algorithm $$A$$, what&rsquo;s the largest number $$N$$ such that on average, $$A$$ solves problems of size $$N$$ in under one minute?</p>
+
+<details>
+<pre><code class='language-python'>
+def hello_world():
+    print("Hello, world!")
+
+hello_world()
+</code></pre>
+</details>
+
+<h3 id="1-brute-force">1. Brute Force</h3>
+<p>Fundamentally, a solution to an instance of the BPP (we can refer to an instance as &lsquo;a BPP&rsquo;) is a function mapping $$N$$ items into used bins. We could conceivably iterate over all possible functions of that form, identify which ones are valid, i.e. does not overfill any bin, and among them select the one that uses the fewest bins. Since there are only $$N$$ items, there must be at most $$N$$ bins, so there are $$N^N$$ such functions. Below is some python code that does what we&rsquo;ve described, and a graph showing how the runtime grows with input size.</p>
+<!-- raw HTML omitted -->
+<p>def pack_brute_force(weights, B):
+best_pack = None
+N = len(weights)
+for bin_indexes in itertools.product(*[range(N)] * N):
+pack = collections.defaultdict(list)
+for item, bin_index in zip(weights, bin_indexes):
+pack[bin_index].append(item)</p>
+<pre><code>    if all(sum(b) &lt;= B for b in pack.values()) and (
+        best_pack is None or len(pack) &lt; len(best_pack)
+    ):
+        best_pack = list(pack.values())
+return best_pack
+</code></pre>
+<p><!-- raw HTML omitted --><!-- raw HTML omitted --></p>
+<!-- raw HTML omitted -->
+<p>[TODO: add graph]</p>
+<ul>
+<li>note: can&rsquo;t use variable name <code>bin</code> because it&rsquo;s a keyword in python to convert numbers into binary</li>
+<li>note: refer to items and weights interchangeably in the code</li>
+</ul>
+<h4 id="2-limit-the-number-of-bins-considered">2. Limit the number of bins considered</h4>
+<p>We know, on average, that we&rsquo;re going to use a bit more than N/2 bins for our items. Therefore it&rsquo;s wasteful to consider functions that map to all N bins. If we knew approximately the number of bins we need ahead of time, we could significantly reduce the set of functions we need to look at. The risk is that if we guess too low of a number of bins, no assignment will be valid. In this case, we can use a heuristic algorithm that creates a packing pretty-good-but-not-necessarily-perfect number of bins, and then test all functions into that number of bins to see if any functions leave any bins empty, thereby excluding those bins from the result. Decreasing Best Fit (DBF) is a great practical algorithm to approximately solve BPPs. It simply iterates through the items in decreasing order of size and at each step puts the item into the bin that, by that point, is the fullest bin that has capacity to hold the item.</p>
+<p>As an aside, it&rsquo;s an interesting exercise to come up with the smallest BPP where DBF does not come up with the optimal answer. In this case let&rsquo;s say the bin capacity and item sizes must be integers, and define one BPP to be smaller than another if either it has fewer items, or has the same number of items and a smaller bin capacity. If you think you&rsquo;ve found a minimal example, DM me on twitter about it!</p>
+<!-- raw HTML omitted -->
+<pre><code>eligible_bins = [
+    (i, v) for i, v in enumerate(bin_weights) if v &lt;= weight_limit
+]
+if eligible_bins:
+    max_weight_bin_index = max(eligible_bins, key=lambda x: x[1])[0]
+    bins[max_weight_bin_index].append(w)
+    bin_weights[max_weight_bin_index] += w
+else:
+    bins.append([w])
+    bin_weights.append(w)
+</code></pre>
+<p>return bins
+<!-- raw HTML omitted --><!-- raw HTML omitted --></p>
+<!-- raw HTML omitted -->
+<p>Now we can use the result from DBF to improve on our brute force algorithm</p>
+<p>
+<details>
+<summary>Brute Force v2</summary>  
+
+```python
+def pack_brute_force_v2(weights, B):
+    best_pack = None
+    N = len(weights)
+    H = len(pack_DBF(weights, B))
+    for bin_indexes in itertools.product(*[range(H)] * N):
+        pack = collections.defaultdict(list)
+        for item, bin_index in zip(weights, bin_indexes):
+            pack[bin_index].append(item)
+
+        if all(sum(b) <= B for b in pack.values()) and (
+            best_pack is None or len(pack) < len(best_pack)
+        ):
+            best_pack = list(pack.values())
+    return best_pack
+```
+
+</details>
+
+[TODO: include graph that shows improvement and text to summarize the improvement]</p>
+<h3 id="3-using-search">3. Using Search</h3>
+<p>The brute force approaches are very unprincipled: they
+[TODO: include how they consider the &lsquo;same&rsquo; solution multiple times by symmetry of the bins]
+it should also be possible to &lsquo;short circuit&rsquo; a solution that has only been partially identified if overflows a bin. The natural way to take advantage of these opportunities is with a search algorithm. We traverse a tree of nodes, where each node corresponds to a partial assignment of items to bins, and the children of each node correspond to associating one additional item to a bin. Then we can ensure that our traversal only visits nodes that correspond to valid partial assignments. We can also eliminate any symmetrical solutions in the following way. First, assume that at each node we&rsquo;ve packed exactly the first k items, and that children correspond to different ways to pack the next item in the input. Then, if the current item is being associated with an unopened (aka empty) bin, without loss of generality assume that it is the next bin. With these optimizations, we can hope to see a significant improvement over our existing solution.</p>
+<!-- raw HTML omitted -->
+<pre><code>    next_weight = weights[0]
+    remaining_weights = weights[1:]
+
+    for i, b in enumerate(bins):
+        if sum(b) + next_weight &lt;= B:
+            bins[i].append(next_weight)
+            for packing in pack_incremental(remaining_weights, B, bins):
+                yield packing
+            bins[i].pop()
+
+    bins.append([next_weight])
+    for packing in pack_incremental(remaining_weights, B, bins):
+        yield packing
+    bins.pop()
+
+
+def pack_search(weights, B):
+    bins = []
+    best_packing = []
+    for packing in pack_incremental(weights, B, bins):
+        if not best_packing or len(packing) &lt; len(best_packing):
+            best_packing = [list(b) for b in packing]
+
+    return best_packing
+```
+</code></pre>
+<!-- raw HTML omitted -->
+<p>[TODO: evaluation and enthusiasm]</p>
+<h4 id="4-pre-sort-the-input">4. Pre-sort the input</h4>
+<p>One cheap trick is to sort your items in descending order ahead of time. Larger items are more highly constrained on where they can go, so considering them first increases the likelihood of pruning larger branches of the search tree.</p>
+<!-- raw HTML omitted -->
+<p>[TODO: evaluation and enthusiasm]</p>
+<h4 id="5-prune-proactively">5. Prune proactively</h4>
+<p>Branch and Bound is a well-known category of algorithms.
+Branch and bound (BB, B&amp;B, or BnB) is a method for solving optimization problems by breaking them down into smaller sub-problems and using a bounding function to eliminate sub-problems that cannot contain the optimal solution. It is an algorithm design paradigm for discrete and combinatorial optimization problems, as well as mathematical optimization. A branch-and-bound algorithm consists of a systematic enumeration of candidate solutions by means of state space search: the set of candidate solutions is thought of as forming a rooted tree with the full set at the root. The algorithm explores branches of this tree, which represent subsets of the solution set. Before enumerating the candidate solutions of a branch, the branch is checked against upper and lower estimated bounds on the optimal solution, and is discarded if it cannot produce a better solution than the best one found so far by the algorithm.</p>
+<p>[TODO: fix]</p>
+<p>in our case, stop searching at a node if it has chance of beating the previous best packing.</p>
+<p>[code, evaluation and enthusiasm]</p>
+<h3 id="6-use-a-solver">6. Use a solver</h3>
+<p>a bit cheating but the tools are available. also there&rsquo;s a twist that using a solver isn&rsquo;t even the best we can do. Constraint Satisfaction Problem, ORTools, yadda yadda.</p>
+<p>[code, evaluation and enthusiasm]</p>
+<h4 id="7-specialize">7. Specialize</h4>
+<pre><code>7) H max bins
+</code></pre>
+<p>[code, evaluation and enthusiasm]</p>
+<h4 id="8-without-loss-of-generality">8. Without loss of generality</h4>
+<pre><code>8) fix the assignment of items with weight &gt; B/2 
+</code></pre>
+<p>[code, evaluation and enthusiasm]</p>
+<h3 id="9-branch-and-bound-on-bins-directly">9. Branch and Bound on bins directly</h3>
+<ul>
+<li>you could also reframe the decision tree to complete bins first. this is beneficial because you can track waste and get lower bounds that allow you to prune large branches of the search space.</li>
+</ul>
+<p>[code, evaluation and enthusiasm]</p>
+<h4 id="10-wlog-next-bin-contains-the-next-largest-item">10. WLOG next bin contains the next largest item</h4>
+<p>[explanation, code, evaluation and enthusiasm]</p>
+<h4 id="11-track-waste">11. Track waste</h4>
+<pre><code>11) do not exceed maximum total waste. this amounts to tracking a lower bound and only excluding an item if the remaining items exceed the lower bound.
+</code></pre>
+<p>[explanation, code, evaluation and enthusiasm]</p>
+<h4 id="12-using-domination">12. Using Domination</h4>
+<pre><code>12) if you're going to exclude an item, the sum of the other items you include must exceed the item you excluded
+</code></pre>
+<p>[explanation, code, evaluation and enthusiasm]</p>
+<h4 id="13-handling-duplicate-sizes">13. Handling duplicate sizes</h4>
+<pre><code>13) handle duplicate values (is this worth the complexity?)
+</code></pre>
+<p>[explanation, code, evaluation and enthusiasm]</p>
+<h2 id="summary-and-conclusion">Summary and Conclusion</h2>
+
+  
+
+
+  </main>
+  <footer>
+    <p>Copyright 2024. All rights reserved.</p>
+
+  </footer>
+</body>
+</html>
