@@ -11,14 +11,14 @@ The classical BPP is formulated as an offline algorithm. This means that the alg
 [insert a point that we're doing 1D bin packing, so we're representing items and bins by real numbers]
 
 Benchmark:
-For all of the algorithms we list we're going to set B=100 and randomly generate weights for N items in the range [1, B-1]. We'll measure the runtime of our algorithms for increasing values of N, until it gets so large that the algorithm takes unreasonable long to complete. A simple evaluation we'll use is: for some algorithm A, what's the largest number N such that on average, A solves problems of size N in under one minute?
+For all of the algorithms we list we're going to set $$B=100$$ and randomly generate weights for $$N$$ items in the range $$[1, B-1]$$. We'll measure the runtime of our algorithms for increasing values of $$N$$, until it gets so large that the algorithm takes unreasonable long to complete. A simple evaluation we'll use is: for some algorithm $$A$$, what's the largest number $$N$$ such that on average, $$A$$ solves problems of size $$N$$ in under one minute?
 
 ### 1. Brute Force ###
-Fundamentally, a solution to an instance of the BPP (we can refer to an instance as 'a BPP') is a function mapping N items into used bins, so we could conceivably iterate over all possible functions of that form and identify which one is valid, i.e. does not overfill any bin, and uses the fewest bins. Since there are only N items, there must be at most N bins, so there are N^N such functions. Below is some python code that does what we've described, and a graph showing how the runtime grows with input size.
-
+Fundamentally, a solution to an instance of the BPP (we can refer to an instance as 'a BPP') is a function mapping $$N$$ items into used bins. We could conceivably iterate over all possible functions of that form, identify which ones are valid, i.e. does not overfill any bin, and among them select the one that uses the fewest bins. Since there are only $$N$$ items, there must be at most $$N$$ bins, so there are $$N^N$$ such functions. Below is some python code that does what we've described, and a graph showing how the runtime grows with input size.
+ 
 <details>
     <summary>Python Code</summary>
-<pre><code class="language-python">import collections
+<pre><code class="python">import collections
 import itertools
 
 def pack_brute_force(weights, B):
@@ -36,7 +36,6 @@ def pack_brute_force(weights, B):
     return best_pack
 </code></pre>
 </details>
-```
 
 [TODO: add graph]
 
@@ -51,28 +50,27 @@ As an aside, it's an interesting exercise to come up with the smallest BPP where
 
 <details>
     <summary>DBF Python Code</summary>
-    ```python
-    def pack_DBF(weights, B):  # decreasing best fit
-    weights = list(reversed(sorted(weights)))
-    bins = []
-    bin_weights = []
-    for w in weights:
-        weight_limit = B - w
+<pre><code class="python">def pack_DBF(weights, B):
+weights = list(reversed(sorted(weights)))
+bins = []
+bin_weights = []
+for w in weights:
+    weight_limit = B - w
 
-        eligible_bins = [
-            (i, v) for i, v in enumerate(bin_weights) if v <= weight_limit
-        ]
-        if eligible_bins:
-            max_bin_weight_index = max(eligible_bins, key=lambda x: x[1])[0]
-            bins[max_bin_weight_index].append(w)
-            bin_weights[max_bin_weight_index] += w
-        else:
-            bins.append([w])
-            bin_weights.append(w)
+    eligible_bins = [
+        (i, v) for i, v in enumerate(bin_weights) if v <= weight_limit
+    ]
+    if eligible_bins:
+        max_bin_weight_index = max(eligible_bins, key=lambda x: x[1])[0]
+        bins[max_bin_weight_index].append(w)
+        bin_weights[max_bin_weight_index] += w
+    else:
+        bins.append([w])
+        bin_weights.append(w)
 
-    return bins
+return bins
+</code></pre>
 </details>
-    ```
 
 Now we can use the result from DBF to improve on our brute force algorithm
 
