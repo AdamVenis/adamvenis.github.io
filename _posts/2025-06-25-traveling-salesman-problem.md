@@ -85,3 +85,38 @@ future work:
     - faster MST
     - better step size calculation
     - upper bound heuristic - when would this matter?
+
+<!--
+is there some hybrid search + caching?
+
+
+does removing LB from v4 help?!?
+    it does. wtf. why.
+
+search is really poor compared to caching lol oh well
+is it really just HK LB that makes the difference?
+even the 1tree LB is pretty weak
+
+need a moderate amount of complexity that actually improves over caching
+to make the post flow
+
+note:
+    - low level optimization is nice but algorithmic optimization is better
+
+- when plotting the new ones, include the old ones as more faint lines
+
+
+- rather than planning everything out try writing up what we have
+    - branch and bound
+    - motivation
+    - caching  - what exactly are we caching
+    - 1tree is complex, kind of. maybe it can be motivated via branch and bound.
+    - heuristics
+    - 'structure'
+    - maybe cut some things. like explaining all the algorithmic stuff, otherwise it might get massive
+
+
+WLOG start at 0
+
+should I include profiling / profile data?
+-->
