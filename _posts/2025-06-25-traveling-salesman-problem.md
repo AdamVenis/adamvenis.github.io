@@ -1,12 +1,12 @@
 ---
-title: "Ten practical ideas for faster TSP"
+title: "Solving Medium Sized Traveling Salesman Problems"
 mathjax: true
 layout: post
 ---
 The Traveling Salesman Problem (TSP), is particularly historic, known for being one of the most famous "hard" problems to design an algorithm for. It's typically taught in an computer science curriculum, though usually in a fairly superficial way. I found myself needing a deeper understanding of the problem and related algorithms while trying to compete in this kaggle competition (https://www.kaggle.com/competitions/hashcode-drone-delivery). This post explains I've learned. The goal is to condense weeks of research, implementation, and experimentation, into a short and practical summary, so it may be useful to the next person looking for this knowledge.
 
 
-In algorithms class, students are mostly taught about algorithms that perform asymptotically "well" and to avoid poor asymptotic behaviour when possible. This guidance is generally valid, but TSP is "NP-complete", meaning there almost certainly [P vs NP](P vs NP) cannot exist an algorithm for it that performs asymptotically well. Nevertheless, it is still a problem that arises in practice, so algorithm designers must do best they can. The label of "NP-complete" suggests that any algorithm will take time to run proportional to two to the power of the size of the input. This would suggest that TSP should be intractible for problem instances larger than, say, 50. In reality, instances with size over 100,000 [link to korean bars] have been solved, using decades of cumulative effort and innovation. 
+In algorithms class, students are mostly taught about algorithms that perform asymptotically "well" and to avoid poor asymptotic behaviour when possible. This guidance is generally valid, but TSP is "NP-complete", meaning there almost certainly [P vs NP](P vs NP) cannot exist an algorithm for it that performs asymptotically well. Nevertheless, it is still a problem that arises in practice, so algorithm designers must do best they can. The label of "NP-complete" suggests that any algorithm will take time to run proportional to two to the power of the size of the input. This would suggest that TSP should be intractible for problem instances larger than, say, 50. In practice, instances with size over 100,000 [link to korean bars] have been solved, using decades of cumulative effort and innovation. 
 
 Bill Cook has done a good job of chronicalling some of the history here https://www.math.uwaterloo.ca/tsp/us/history.html. He explains how larger and larger problems have been solved over time. Among these is a milestone in 1970. Held and Karp, two prominent computer scientists, were able to fully solve a 57-city problem.
 
@@ -14,7 +14,7 @@ If they can do it with the machines of their time, I certainly should be able to
 
 
 ## Methods
-We'll use the aforementioned 57-city problem as a benchmark - let's call it TSP57. Most of our prototype algorithms won't be able to solve the entire problem in a reasonable time, so we'll take the first few cities, solve those, and then incrementally add one city at a time until the runtime exceeds one minute. We'll write code in Python for ease of implementation, taking on a mild handicap that nowhere near counteracts 55 years of hardware improvements. I'm running this on my AMD Ryzen 9 7900X CPU, at 4.7GhZ.
+We'll use this 57-city problem as a benchmark - let's call it TSP57. Most of our prototype algorithms won't be able to solve the entire problem in a reasonable time, so we'll take the first few cities, solve those, and then incrementally add one city at a time until the runtime exceeds one minute. We'll write code in Python for ease of implementation, taking on a mild handicap that nowhere near counteracts 55 years of hardware improvements. I'm running this on my AMD Ryzen 9 7900X CPU, at 4.7GhZ.
 
 
 ## Baseline
@@ -29,7 +29,7 @@ Looks like we can solve up to about 9 cities with this very short, simple code.
 
 ## Idea 1: Caching
 
-Caching is one of the most fundamental tools for speeding up programs. Most programs end up redoing the same computations many times over, so by saving and reusing intermediate values, we can avoiding further computation and finish quicker. With TSP, iterating over $$N!$$ tours ends up recomputing a lot, and caching can bring an asymptotic improvement. We'll use a simple form of caching called memoization. It works by first setting up your problem a in form where it needs to compute $$y = f(x)$$ for many values of x using recursion, and then saving all input-output pairs in a hash table and referring back to it instead of recomputing where possible. With TSP the function we'll memoize takes as input a set nodes with a fixed [??] and returns the shortest tour through those nodes. Then we'll call this for all subsets of the original input. Each call will iterate over all next nodes and recursively fetch results for smaller subsets so O(n) for each call and there are 2^n subsets for a total runtime of O(n*2^n). this is smaller than N! via Sterling's approximation.
+Caching is one of the most fundamental tools for speeding up programs. Most programs end up redoing the same computations many times over, so by saving and reusing intermediate values, we can avoiding further computation and our program will finish quicker. With TSP, iterating over $$N!$$ tours involves a lot of redundant computation, and caching can bring an asymptotic improvement. We'll use memoization, which is a simple form of caching. It works by first formulating the problem where it needs to compute $$y = f(x)$$ for many values of x using recursion, and then saving input-output pairs in a hash table to refer back to instead of recomputing where possible. With TSP the function we'll memoize takes as input a set nodes with a fixed [??] and returns the shortest tour through those nodes. Then we'll call this for all subsets of the original input. Each call will iterate over all next nodes and recursively fetch results for smaller subsets so O(n) for each call and there are 2^n subsets for a total runtime of O(n*2^n). this is smaller than N! via Sterling's approximation.
 
 [maybe a visual of how caching helps, showing multiple subsets of a small problem with a "relies on" relationship]
 
@@ -52,13 +52,13 @@ We've explored avoiding recomputation, but we can do better. In some cases, we d
 Progress is not always monotonic. While it isn't immediately faster, Branch and Bound provides the basis on which to add other improvements.
 
 
-## Idea 3: Include Lower Bounds
+## Idea 3: Lower Bounds
 [3a - lower bound - MST I guess?]
-[3b - 1tree lower bound]
 
 So far we've used the upper bound in B&B to proactively stop searching. The other tool that allows B&B to perform will enable even more pruning: lower bounding. We said that if our current partial tour exceeds the upper bound, we can stop. In fact, we can stop even if the current partial tour hasn't exceeded the upper bound, *as long as we are certain that any completed tour from this point will exceed the upper bound*, even without computing them directly.
 
 [define 1-tree]
+[3b - 1tree lower bound]
 
 
 [it doesn't help but ...]
@@ -66,14 +66,15 @@ Ok, this doesn't seem to be going in the direction, but trust.
 
 
 ## Idea 4: Cost Reduction
-[use this as motivation for HK LB] 
-This is a bit of a tangent. If you look at 
+There's a way to think of TSP as selecting entries directly from a distance matrix without using the definition of a tour. TSP can be thought of as the problem of selecting N entries from a distance matrix - one from each row and one from each column, and minimizing the sum of the selected entries. Actually, this isn't quite correct. This definition allows us to select (1,2)(3,4) from (1,2,3,4) which isn't a tour because it's disconnected. 
 
-Algebraically, TSP entails analyzing a distance matrix and selecting N entries - one from each row and one from each column, such that the sum of selected entries is minimized. Actually, this isn't quite correct. This definition allows us to select (1,2)(3,4) from (1,2,3,4) which isn't a tour because it's disconnected. A correct definition of TSP adds the constraint that there are no cycles of length less than N. From the first part of this definition, since any tour must select exactly one entry from each row and column, it means that if we modify the matrix by adding K to every entry in some row or column, the resulting TSP length will be exactly K larger. [show square of input, modified input, output, modified output].
+[diagram of (12)(34) from the corresponding distance matrix]
 
-There's also a geometric interpretation I guess which is drawing a circle of radius K around some point and collapsing that circle to a point. Maybe that helps idk.
+To fix this formulation, we can add the constraint that there are no cycles of length less than N. From the first part of this definition, since any tour must select exactly one entry from each row and column, it means that if we modify the matrix by adding K to every entry in some row or column, the resulting TSP length will be exactly K larger. 
 
-It's not obvious that this transformation is useful, but let's look back at what we have. Profiling with `python -m cProfile -s cumtime run_experiment.py` we see:
+[show square of input, modified input, output, modified output].
+
+There's also a geometric interpretation I guess which is drawing a circle of radius K around some point and saying that twice that circle's radius must be part of any tour. It's not obvious that this transformation is useful, but let's look back at what we have. Profiling with `python -m cProfile -s cumtime run_experiment.py` we see:
 
 [profile]
 
@@ -83,13 +84,13 @@ Coming back to cost reduction, we can now see a potential benefit: if we can cre
 
 [note: diagonal can be negative cause who cares. also let's keep this symmetric.]
 
-There's an established algorithm that creates as many zeroes as possible, and it's called the [Hungarian algorithm]. But I'm lazy so instead of implementing that we'll implement a simple heuristic that is almost as effective[?]: if there is any row or column that has all nonzero entries, subtract the minimum from all of each entry, and keep iterating while this is possible.
+Let's try creating as many zero entries possible: if there is any row or column that has all nonzero entries, subtract the minimum value of that row or column from each entry, and keep doing this until it's no longer possible to do so. There's a (more efficient)[Hungarian Algorithm] way to do this, but for our purposes this is good enough.
 
 [code]
 [results]
 Not bad!
 
-There's an abstract lesson here. There may be many 'equivalent' problems that have the same solution, but different levels of difficulty to solve. In this case, it may be faster to find an easier equivalent problem and solve that.
+There's an abstract lesson here. The are many 'equivalent' TSP instances that have the same solution, and some are slower to solve than others. In this case, it saves time overall to first find an easier equivalent problem before solving it.
 
 ## Idea 5: Held-Karp Lower Bound
 
