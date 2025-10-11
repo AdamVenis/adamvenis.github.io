@@ -3,39 +3,39 @@ title: "Solving Medium Sized Traveling Salesman Problems"
 mathjax: true
 layout: post
 ---
-The Traveling Salesman Problem (TSP), is particularly historic, known for being one of the most famous "hard" problems to design an algorithm for. It's typically taught in an computer science curriculum, though usually in a fairly superficial way. I found myself needing a deeper understanding of the problem and related algorithms while trying to compete in this kaggle competition (https://www.kaggle.com/competitions/hashcode-drone-delivery). This post explains I've learned. The goal is to condense weeks of research, implementation, and experimentation, into a short and practical summary, so it may be useful to the next person looking for this knowledge.
+The Traveling Salesman Problem (TSP) is known for being one of the most famous "hard" problems to design an algorithm for. It's typically taught in an computer science curriculum, though usually in a fairly superficial way. I found myself needing a deeper understanding of the problem and related algorithms while trying to compete in this kaggle competition (https://www.kaggle.com/competitions/hashcode-drone-delivery). This post explains some of the things I've learned. The goal of this article is to condense weeks of research and experimentation into a short and practical summary, so it may be useful to the next person looking for this knowledge.
 
 
 In algorithms class, students are mostly taught about algorithms that perform asymptotically "well" and to avoid poor asymptotic behaviour when possible. This guidance is generally valid, but TSP is "NP-complete", meaning there almost certainly [P vs NP](P vs NP) cannot exist an algorithm for it that performs asymptotically well. Nevertheless, it is still a problem that arises in practice, so algorithm designers must do best they can. The label of "NP-complete" suggests that any algorithm will take time to run proportional to two to the power of the size of the input. This would suggest that TSP should be intractible for problem instances larger than, say, 50. In practice, instances with size over 100,000 [link to korean bars] have been solved, using decades of cumulative effort and innovation. 
 
-Bill Cook has done a good job of chronicalling some of the history here https://www.math.uwaterloo.ca/tsp/us/history.html. He explains how larger and larger problems have been solved over time. Among these is a milestone in 1970. Held and Karp, two prominent computer scientists, were able to fully solve a 57-city problem.
+Bill Cook has done a good job of chronicalling some of the history here https://www.math.uwaterloo.ca/tsp/us/history.html. He explains how larger and larger problems have been solved over time. Among these is a milestone in 1970. Michael Held and Richard Karp, two prominent computer scientists, were the first to fully solve a widely publicized 57-city problem.
 
-If they can do it with the machines of their time, I certainly should be able to solve it now. After all, computers have become [~X] faster in the last 55 years. I'll walk through a few practical ideas and approaches to TSP, culminating in code that solves this 57-city problem in 15 seconds.
+If they can do it with the machines of their time, I certainly should be able to solve it now. In 1970, the fastest computer was the [Cray CDC 7600](https://en.wikipedia.org/wiki/CDC_7600), which had an estimated 10MFLOPS. I currently use an AMD Ryzen 9 7900X CPU which has an estimated 3TFLOPS, a 300,000x improvement over 55 years ago.  In the rest of the article, I'll walk through some practical ideas and approaches to TSP, culminating in code that solves this 57-city problem in 15 seconds.
 
 
 ## Methods
-We'll use this 57-city problem as a benchmark - let's call it TSP57. Most of our prototype algorithms won't be able to solve the entire problem in a reasonable time, so we'll take the first few cities, solve those, and then incrementally add one city at a time until the runtime exceeds one minute. We'll write code in Python for ease of implementation, taking on a mild handicap that nowhere near counteracts 55 years of hardware improvements. I'm running this on my AMD Ryzen 9 7900X CPU, at 4.7GhZ.
+We'll use this 57-city problem as a benchmark - let's call it TSP57. Our first few algorithms won't be able to solve the entire problem in a reasonable amount of time, so to measure their performance we'll solve a reduced TSP with only the first few cities, and then incrementally add one city at a time until the runtime exceeds one minute. We'll write the code in Python for ease of implementation. Admittedly it isn't as fast as the Assembly code that would've been written in the 1970s, but this handicap is still nothing compared to the benefits of modern hardware.
 
 
 ## Baseline
-The most direct approach to solve TSP is to simply consider all possible tours - that is, all possible orderings of the N cities, and return the one with the minimum length. For N cities, there are N! tours, so this brute force algorithm runs in O(N!). By Stirling's approximation(https://en.wikipedia.org/wiki/Stirling%27s_approximation), N! grows like O(N^N), which is much slower than even a typical exponential O(2^N). Here is a concise implementation in Python. 
+The simplest and most direct approach to solving TSP is simply to consider all possible tours - that is, all possible orderings of the N cities, and return one with minimal length (there may be multiple). For N cities, there are N! tours, so this brute force algorithm runs in O(N!). By Stirling's approximation(https://en.wikipedia.org/wiki/Stirling%27s_approximation), N! grows like O(N^N), which is much slower than even a typical exponential O(2^N). Here is a concise implementation in Python. 
 
 [code]
 
 Now for TSP57, there are 57! possible tours, or ~4 * 10^76. Even if we could evaluate each tour in a single clock cycle, it would take ~2.7 * 10^59 years for the brute force algorithm to solve TSP57 on my CPU. Unfortunately it is predicted that the sun will engulf the earth in just 7.5 billion years, so we can't quite be that patient. 
 
 [graph]
-Looks like we can solve up to about 9 cities with this very short, simple code.
+It looks like we can solve up to about 9 cities with this very short, simple code.
 
 ## Idea 1: Caching
 
-Caching is one of the most fundamental tools for speeding up programs. Most programs end up redoing the same computations many times over, so by saving and reusing intermediate values, we can avoiding further computation and our program will finish quicker. With TSP, iterating over $$N!$$ tours involves a lot of redundant computation, and caching can bring an asymptotic improvement. We'll use memoization, which is a simple form of caching. It works by first formulating the problem where it needs to compute $$y = f(x)$$ for many values of x using recursion, and then saving input-output pairs in a hash table to refer back to instead of recomputing where possible. With TSP the function we'll memoize takes as input a set nodes with a fixed [??] and returns the shortest tour through those nodes. Then we'll call this for all subsets of the original input. Each call will iterate over all next nodes and recursively fetch results for smaller subsets so O(n) for each call and there are 2^n subsets for a total runtime of O(n*2^n). this is smaller than N! via Sterling's approximation.
+Caching is one of the most fundamental tools for speeding up programs. Most programs end up redoing the same computations many times over, so by saving and reusing intermediate values, we can avoiding further computation and our program will finish quicker. With TSP, iterating over $$N!$$ tours involves a lot of redundant computation, and caching can bring an asymptotic improvement. We'll use [memoization](https://en.wikipedia.org/wiki/Memoization), which is a simple form of caching. It works by first formulating the problem where it needs to compute $$y = f(x)$$ for many values of $$x$$, and then saving input-output pairs in a hash table to refer back to instead of recomputing where possible. With TSP, the function we'll memoize takes as input the "current" node and the set of remaining unvisited nodes, and returns the shortest tour passing through these remaining nodes and returning to the first visited node (the "root"). The algorithm proceeds by calling this function for all subsets of the original input. Each call iterates over all possible next nodes and recursively fetches results for smaller subsets. 
 
 [maybe a visual of how caching helps, showing multiple subsets of a small problem with a "relies on" relationship]
 
-think of a tree, where each node represents the decision to visit a particular city next in the tour. Then a tour is a leaf in this tree at depth N. Thinking recursively, the minimum cost tour is the leaf where at each internal node, the selected branch is the minimum over resulting tour costs[sic]. Structuring the problem this way allows us to reuse computation: if you know the minimum tour for every subset of cities, you can scan linearly at each step to determine the optimal next city.
+Think of a tree, where each node represents the decision to visit a particular city next in the tour. Then a tour is a leaf in this tree at depth N. Thinking recursively, the minimum cost tour is the leaf where at each internal node, the selected branch is the minimum over resulting tour costs[sic]. Structuring the problem this way allows us to reuse computation: if you know the minimum tour for every subset of cities, you can scan linearly at each step to determine the optimal next city.
 
-There are 2^N subsets, so this algorithm now runs in O(2^N). See that it does indeed outperform the brute force algorithm.
+Tabulating the runtime, we get O(n) from each 'next node' and 2^n subsets for a total runtime of O(n\*2^n). Note that this is smaller than N!, so this yields an asymptotic improvement over the brute force algorithm. 
 
 [code]
 [graph]
@@ -43,26 +43,32 @@ There are 2^N subsets, so this algorithm now runs in O(2^N). See that it does in
 
 ## Idea 2: Search
 
-[note somehow that we can't keep caching because caching requires solving the tails to optimality via a "bottoms up" approach, but to search and proactively prune we need a "top down" approach.]
-We've explored avoiding recomputation, but we can do better. In some cases, we don't need to compute the length of certain tours at all if we can guarantee that they can't be the shortest. Say you've computed the length of some tour to be 100. This tour may or may not be optimal, but this means that any other tour with length over 100 will certainly not be optimal. Essentially, 100 has been established as an upper bound on the optimal tour. Furthermore, if we select cities to add to our tour one by one, and the running tour length exceeds 100, we don't need to consider any of the (possibly many) tours with that prefix. This allows us to entirely avoid searching through large subsets of tours. Formally, this technique is called Branch and Bound (B&B). It isn't a provably asymptotic improvement, but in practice it is very broadly applicable and useful.
+Since TSP is an NP-complete problem, we can't hope to get further asymptotic improvements over O(2^N), but we can still make significant improvements in practice. We've explored avoiding recomputing some values, but we can do better. In some cases, we don't need to compute the length of certain tours at all if we can guarantee that they can't be the shortest. For example, if the algorithm identifies that some tour has length 100, then any other tour with length over 100 will certainly not be optimal. Essentially, 100 has been established as an upper bound on the optimal tour. If our algorithm selects cities to add to a tour one by one, and some accumulated partial tour length exceeds 100, we don't need to consider any of the (possibly many) tours that start with that partial tour. This allows us to entirely avoid searching through large sets of tours, and could be a big help. Formally, this technique is called Branch and Bound (B&B). Here "Branch" refers to adding nodes to a tour one by one, and "Bound" refers to making logical arguments to entirely avoid searching certain sets of tours.
 
 [code]
 [graph]
-[notes]
-Progress is not always monotonic. While it isn't immediately faster, Branch and Bound provides the basis on which to add other improvements.
+[comment that Upper Bounding is done by comparing to the running global min]
+
+Experiments don't always produce monotonic improvements. While it isn't immediately faster, B&B provides the basis on which to add other improvements.
 
 
 ## Idea 3: Lower Bounds
 [3a - lower bound - MST I guess?]
 
-So far we've used the upper bound in B&B to proactively stop searching. The other tool that allows B&B to perform will enable even more pruning: lower bounding. We said that if our current partial tour exceeds the upper bound, we can stop. In fact, we can stop even if the current partial tour hasn't exceeded the upper bound, *as long as we are certain that any completed tour from this point will exceed the upper bound*, even without computing them directly.
+So far we've used upper bounds in B&B to proactively stop searching. We can also use lower bounds to achieve even more pruning, although the concepts and implementation are more complex. We said that if our current partial tour exceeds the upper bound, we can stop. In fact, we can stop even if the current partial tour hasn't exceeded the upper bound, *if we are certain that any completed tour from this point will exceed the upper bound*, even without computing them directly. Formally, if $$L^\* := [the shortest remaining tour]$$ we want to find some $$L$$ such that we can guarantee $$L \leq L^*$$, even if we don't know what $$L^*$$ is. It's not obvious, but there are many ways to do this that result in different possible values of $$L$$. Among these, we want to find a *tight* lower bound, i.e. a value of $$L$$ that is as close as possible to $$L^*$$.
 
-[define 1-tree]
-[3b - 1tree lower bound]
+A very crude lower bound is: take the shortest possible edge among nodes in the remaining tour, and multiply that length by the number of remaining nodes. 
 
+A better lower bound is MST.
+
+A better lower bound than that is 1Tree. [motivate and define 1-tree]
+
+[code, graph]
 
 [it doesn't help but ...]
-Ok, this doesn't seem to be going in the direction, but trust.
+[notice an interesting tradeoff: some lower bounds may be more expensive to compute, but provide a tighter bound. it's hard to know when this tradeoff is worthwhile, but in principle tighter bounds are worth more computation. a perfectly tight bound reduces total computation from O(2^N) to O(N^2) by only computing for each candidate and only expanding the correct candidate at every depth]
+
+So far, these lower bounds aren't giving us real progress, but we'll revisit tighter lower bounds later; they'll provide the biggest improvements in this article.
 
 
 ## Idea 4: Cost Reduction
@@ -90,7 +96,7 @@ Let's try creating as many zero entries possible: if there is any row or column 
 [results]
 Not bad!
 
-There's an abstract lesson here. The are many 'equivalent' TSP instances that have the same solution, and some are slower to solve than others. In this case, it saves time overall to first find an easier equivalent problem before solving it.
+There's an abstract lesson here. Many 'equivalent' TSP instances have the same solution, and some are slower to solve than others. In this case, it saves time overall to first find an easier equivalent problem before solving it.
 
 ## Idea 5: Held-Karp Lower Bound
 
@@ -124,7 +130,7 @@ future work:
     - upper bound heuristic - when would this matter?
     - cutting planes
 
-[meme: small guy with club, medium guy with spiky club, big scary guy with big club. caption: caching, branch and bound, cutting planes]
+[explain that 'medium' TSP is because caching is good for small, branch and bound is for medium, cutting planes is for large]
 
 <!--
 TODO 2025-09-01
