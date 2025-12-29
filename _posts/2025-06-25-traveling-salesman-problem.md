@@ -29,7 +29,7 @@ It looks like we can solve up to about 9 cities with this very short, simple cod
 
 ## Idea 1: Caching
 
-Caching is one of the most fundamental tools for speeding up programs. Most programs end up redoing the same computations many times over, so by saving and reusing intermediate values, we can avoiding further computation and our program will finish quicker. With TSP, iterating over $$N!$$ tours involves a lot of redundant computation, and caching can bring an asymptotic improvement. We'll use [memoization](https://en.wikipedia.org/wiki/Memoization), a simple form of caching. It works by first formulating the problem where it needs to compute $$y = f(x)$$ for many values of $$x$$, and then saving input-output pairs in a hash table to refer back to instead of recomputing where possible. With TSP, the function we'll memoize takes as input the "current" node and the set of remaining unvisited nodes, and returns the shortest tour that passes through these remaining nodes before returning to the first visited node (the "root"). The algorithm proceeds by calling this function for all subsets of the original input. Each call iterates over all possible next nodes and recursively fetches results for smaller subsets. 
+Caching is one of the most fundamental tools for speeding up programs. Most programs end up redoing the same computations many times over, so by saving and reusing intermediate values, we can avoid further computation and our program will finish quicker. With TSP, iterating over $$N!$$ tours involves a lot of redundant computation, and caching can bring an asymptotic improvement. We'll use [memoization](https://en.wikipedia.org/wiki/Memoization), a simple form of caching. It works by first formulating the problem in a way where it needs to compute $$y = f(x)$$ for many values of $$x$$, and then saves input-output pairs in a hash table so they can be reused, avoid recomputation. With TSP, we'll memoize a function that takes as input both the "current" node and the set of remaining unvisited nodes, and returns the shortest tour that passes through these remaining nodes before returning to the first visited node (the "root"). The algorithm proceeds by calling this function for all subsets of the original input. Each call iterates over all possible next nodes and recursively evaluates results for smaller subsets. 
 
 [maybe a visual of how caching helps, showing multiple subsets of a small problem with a "relies on" relationship]
 
@@ -43,18 +43,16 @@ Tabulating the runtime, we get O(n) from each 'next node' and 2^n subsets for a 
 
 ## Idea 2: Search
 
-Since TSP is an NP-complete problem, we can't hope to get further asymptotic improvements over O(2^N), but we can still make significant improvements in practice. We've explored avoiding recomputing some values, but we can do better. In some cases, we don't need to compute the length of certain tours at all if we can guarantee that they can't be the shortest. For example, if the algorithm identifies that some tour has length 100, then any other tour with length over 100 will certainly not be optimal. Essentially, 100 has been established as an upper bound on the optimal tour. If our algorithm selects cities to add to a tour one by one, and some accumulated partial tour length exceeds 100, we don't need to consider any of the (possibly many) tours that start with that partial tour. This allows us to entirely avoid searching through large sets of tours, and could be a big help. This technique is called Branch and Bound (B&B). Here "Branch" refers to adding nodes to a tour one by one, and "Bound" refers to making logical arguments to entirely avoid searching certain sets of tours.
+Since TSP is an NP-complete problem, we can't hope to asymptotically improve beyond O(2^N), but we can still make significant improvements in practice. We've explored avoiding recomputing values, but we can do better. In some cases, we don't need to compute the length of certain tours at all if we can guarantee that they can't be the shortest. For example, if the algorithm identifies that some tour has length 100, then any other tour with length over 100 will certainly not be optimal. Essentially, 100 has been established as an upper bound on the optimal tour. If our algorithm selects cities to add to a tour one by one, and some accumulated partial tour length exceeds 100, we don't need to consider any of the (possibly many) tours that start with that partial tour. This allows us to entirely avoid searching through large sets of tours, and could be a big help. This technique is called Branch and Bound (B&B). Here "Branch" refers to exploring a search tree by adding nodes to a tour one by one, and "Bound" refers to making logical arguments to entirely avoid searching certain sets of tours.
 
 [code]
 [graph]
 [comment that Upper Bounding is done by comparing to the running global min]
 
-Experiments don't always produce monotonic improvements. While it isn't immediately faster, B&B provides the basis on which to add other improvements.
+So far this isn't an improvement over caching. While it isn't immediately faster, B&B provides a basis on which to add other improvements, which will lead to something faster.
 
 
 ## Idea 3: Lower Bounds
-[3a - lower bound - MST I guess?]
-
 So far we've used upper bounds in B&B to proactively stop searching. We can also use lower bounds to achieve even more pruning, although the concepts and implementation are more complex. We said that if our current partial tour exceeds the upper bound, we can stop searching. Sometimes we can do better, and stop searching even if the current partial tour hasn't exceeded the upper bound, *if we are certain that any completed tour from this point will exceed the upper bound*, even without computing them directly. This amounts to determining some quantity $$L$$ such that any tour consistent with the selections made so far must have length at least $$L$$. Equivalently, if $$L^* := [the shortest remaining tour]$$ we want to find some $$L$$ such that we can guarantee $$L \leq L^*$$, even though we don't know what $$L^*$$ is. Once we establish this $$L$$, if it happens to be larger than our current best tour length $$U$$, we can immediately stop searching down this branch of the search tree and try something else, because we know that we can't hope to improve on our current best.
 
 It's not obvious, but there are many ways to do this and calculate different possible values of $$L$$. If possible, we prefer a larger $$L$$, since it will be more likely to exceed $$U$$ and prune this branch of the search tree. Such lower bounds are called *tighter* when they are closer to $$L^*$$.
@@ -71,7 +69,7 @@ Note that MST can be calculated in several different ways. Two of the most popul
 [it doesn't help but ...]
 [notice an interesting tradeoff: some lower bounds may be more expensive to compute, but provide a tighter bound. it's hard to know when this tradeoff is worthwhile, but in principle tighter bounds are worth more computation. a perfectly tight bound reduces total computation from O(2^N) to O(N^2) by only computing for each candidate and only expanding the correct candidate at every depth]
 
-So far, these lower bounds aren't giving us real progress, but we'll revisit this; a tighter lower bound will provide the biggest improvements in this article.
+All this work and still not better than caching yet. We'll revisit this; a tighter lower bound will provide the biggest improvements in this article.
 
 
 ## Idea 4: Cost Reduction
@@ -91,7 +89,7 @@ This shows that the majority ([X]%) of our runtime is spent calculating MSTs, so
 
 Coming back to cost reduction, a potential benefit emerges: the more zeroes there are in the distance matrix so long as all entries are nonnegative, the better. Note that for our purposes the diagonal entries are totally ignored by Prim's algorithm, so we don't care if those become negative.
 
-[also let's keep this symmetric, as in reduce from both the i'th row and column.]
+[note that adjacency matrices of graphs are symmetric. if we modify the i'th row without also modifying the corresponding i'th column, the resulting matrix will not be symmetric. so we are limited to adding any penalty to both the i'th row and i'th column for some i.]
 
 Let's try creating as many zero entries possible: if there is any row or column that has all nonzero entries, subtract the minimum value of that row or column from each entry, and keep doing this until it's no longer possible to do so. There's a (faster)[Hungarian Algorithm] way to do this, but our crude approach is already nearly instantaneous, so we can ignore that and move on.
 
@@ -103,7 +101,7 @@ There's an abstract idea here that's worth reflecting on. We've found a way to t
 
 ## Idea 5: Held-Karp Lower Bound
 
-This idea is the least intuitive, so lock in. Held and Karp themselves found a way to compute a tighter lower bound than using the 1-Tree Lower Bound. 
+This idea is the least intuitive, so lock in. Held and Karp themselves found a way to compute a tighter lower bound than the 1-Tree Lower Bound we've established, by refining it. 
 
 We saw with cost reduction that we can add a rank-1 matrix $$v^T w$$ to $$D$$ and the TSP length will change by exactly $$\sum(v) + \sum(w)$$. With 1-Trees, that's not true. 1-Trees don't have the properties of selecting exactly two edges incident to each node, so a different penalty will result in a different minimum 1-Tree. However, for any penalty function, *the adjusted 1-Tree cost is still a lower bound for the original problem*. This is the key insight. It means that we can try different penalty values to get different possible lower bounds, and then pick the maximum value to produce the tightest bound.
 
