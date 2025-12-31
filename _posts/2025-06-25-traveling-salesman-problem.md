@@ -2,6 +2,7 @@
 title: "Solving Medium Sized Traveling Salesman Problems"
 mathjax: true
 layout: post
+published: false
 ---
 The Traveling Salesman Problem (TSP) is known for being one of the most famous "hard" problems to design an algorithm for. It's typically taught in an computer science curriculum, though usually in a fairly superficial way. I found myself needing a deeper understanding of the problem and related algorithms while trying to compete in this kaggle competition (https://www.kaggle.com/competitions/hashcode-drone-delivery). This post explains some of the things I've learned. The goal of this article is to condense weeks of research and experimentation into a short and practical summary, so it may be useful to the next person looking for this knowledge.
 
@@ -17,17 +18,17 @@ If they can do it with the machines of their time, I certainly should be able to
 We'll use this 57-city problem as a benchmark - let's call it TSP57. Our first few algorithms won't be able to solve the entire problem in a reasonable amount of time, so to measure their performance we'll solve a reduced TSP with only the first few cities, and then incrementally add one city at a time until the runtime exceeds one minute. We'll write the code in Python for ease of implementation. Admittedly it isn't as fast as the Assembly code that would've been written in the 1970s, but this handicap is still nothing compared to the benefits of modern hardware.
 
 
-## Baseline
+## 0. Baseline
 The simplest and most direct approach to solving TSP is simply to consider all possible tours - that is, all possible orderings of the N cities, and return one with minimal length (there may be multiple). For N cities, there are N! tours, so this brute force algorithm runs in O(N!). By Stirling's approximation(https://en.wikipedia.org/wiki/Stirling%27s_approximation), N! grows like O(N^N), which is much slower than even a typical exponential O(2^N). Here is a concise implementation in Python. 
 
 [code]
 
-Now for TSP57, there are 57! possible tours, or ~4 * 10^76. Even if we could evaluate each tour in a single clock cycle, it would take ~2.7 * 10^59 years for the brute force algorithm to solve TSP57 on my CPU. Unfortunately it is predicted that the sun will engulf the earth in just 7.5 billion years, so we can't quite be that patient. 
+For 57 cities, there are $$57! > 10^{76}$$ possible tours. Even if we could evaluate each tour in a single clock cycle, it would take over $$10^59$$ years for the brute force algorithm to solve TSP57 on my CPU. Unfortunately it is predicted that the sun will engulf the earth in just 7.5 billion years, so we can't quite be that patient. 
 
 [graph]
 It looks like we can solve up to about 9 cities with this very short, simple code.
 
-## Idea 1: Caching
+## 1. Caching
 
 Caching is one of the most fundamental tools for speeding up programs. Most programs end up redoing the same computations many times over, so by saving and reusing intermediate values, we can avoid further computation and our program will finish quicker. With TSP, iterating over $$N!$$ tours involves a lot of redundant computation, and caching can bring an asymptotic improvement. We'll use [memoization](https://en.wikipedia.org/wiki/Memoization), a simple form of caching. It works by first formulating the problem in a way where it needs to compute $$y = f(x)$$ for many values of $$x$$, and then saves input-output pairs in a hash table so they can be reused, avoid recomputation. With TSP, we'll memoize a function that takes as input both the "current" node and the set of remaining unvisited nodes, and returns the shortest tour that passes through these remaining nodes before returning to the first visited node (the "root"). The algorithm proceeds by calling this function for all subsets of the original input. Each call iterates over all possible next nodes and recursively evaluates results for smaller subsets. 
 
@@ -41,7 +42,7 @@ Tabulating the runtime, we get O(n) from each 'next node' and 2^n subsets for a 
 [graph]
 [notes]
 
-## Idea 2: Search
+## 2. Search
 
 Since TSP is an NP-complete problem, we can't hope to asymptotically improve beyond O(2^N), but we can still make significant improvements in practice. We've explored avoiding recomputing values, but we can do better. In some cases, we don't need to compute the length of certain tours at all if we can guarantee that they can't be the shortest. For example, if the algorithm identifies that some tour has length 100, then any other tour with length over 100 will certainly not be optimal. Essentially, 100 has been established as an upper bound on the optimal tour. If our algorithm selects cities to add to a tour one by one, and some accumulated partial tour length exceeds 100, we don't need to consider any of the (possibly many) tours that start with that partial tour. This allows us to entirely avoid searching through large sets of tours, and could be a big help. This technique is called Branch and Bound (B&B). Here "Branch" refers to exploring a search tree by adding nodes to a tour one by one, and "Bound" refers to making logical arguments to entirely avoid searching certain sets of tours.
 
@@ -52,7 +53,7 @@ Since TSP is an NP-complete problem, we can't hope to asymptotically improve bey
 So far this isn't an improvement over caching. While it isn't immediately faster, B&B provides a basis on which to add other improvements, which will lead to something faster.
 
 
-## Idea 3: Lower Bounds
+## 3. Lower Bounds
 So far we've used upper bounds in B&B to proactively stop searching. We can also use lower bounds to achieve even more pruning, although the concepts and implementation are more complex. We said that if our current partial tour exceeds the upper bound, we can stop searching. Sometimes we can do better, and stop searching even if the current partial tour hasn't exceeded the upper bound, *if we are certain that any completed tour from this point will exceed the upper bound*, even without computing them directly. This amounts to determining some quantity $$L$$ such that any tour consistent with the selections made so far must have length at least $$L$$. Equivalently, if $$L^* := [the shortest remaining tour]$$ we want to find some $$L$$ such that we can guarantee $$L \leq L^*$$, even though we don't know what $$L^*$$ is. Once we establish this $$L$$, if it happens to be larger than our current best tour length $$U$$, we can immediately stop searching down this branch of the search tree and try something else, because we know that we can't hope to improve on our current best.
 
 It's not obvious, but there are many ways to do this and calculate different possible values of $$L$$. If possible, we prefer a larger $$L$$, since it will be more likely to exceed $$U$$ and prune this branch of the search tree. Such lower bounds are called *tighter* when they are closer to $$L^*$$.
@@ -72,7 +73,7 @@ Note that MST can be calculated in several different ways. Two of the most popul
 All this work and still not better than caching yet. We'll revisit this; a tighter lower bound will provide the biggest improvements in this article.
 
 
-## Idea 4: Cost Reduction
+## 4. Cost Reduction
 There's a way to think of TSP as selecting entries directly from a distance matrix without using the definition of a tour. TSP can be thought of as the problem of selecting N entries from a distance matrix - one from each row and one from each column, and minimizing the sum of the selected entries. Actually, this isn't quite correct. This definition allows us to select (1,2)(3,4) from (1,2,3,4) which isn't a tour because it's disconnected. 
 
 [diagram of (12)(34) from the corresponding distance matrix]
@@ -99,7 +100,7 @@ Not bad!
 
 There's an abstract idea here that's worth reflecting on. We've found a way to transform our input such that (1)) the output unchanged, and (2) the problem is easier to solve. Even though this transformation preprocessing adds a step and some complexity to our algorithm, it saves time overall.
 
-## Idea 5: Held-Karp Lower Bound
+## 5. Held-Karp Lower Bound
 
 This idea is the least intuitive, so lock in. Held and Karp themselves found a way to compute a tighter lower bound than the 1-Tree Lower Bound we've established, by refining it. 
 
@@ -117,7 +118,7 @@ If the 1-Tree has deg(n) == 2 for all nodes, then it found a tour, which is the 
 [results]
 Nice!
 
-## Idea 6: Additional Improvements
+## 6. Additional Improvements
 [6a - use tour returned by HK when you can]
 
 

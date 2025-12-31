@@ -2,6 +2,7 @@
 title: "Faster Bin Packing"
 mathjax: true
 layout: post
+published: false
 ---
 The Bin Packing Problem (BPP) is a classical algorithms problem in Computer Science. The problem is, given a collection of variable sized items and uniformly sized bins, to pick a bin for each item to be 'packed' into, where the goal is to minimize the number of bins used. Bin packing is considered a fundamental problem due to its simplicity and that many other problems relate to it. It's applied in real world areas like filling up shipping containers for supply chains, creating file backups in media, and technology mapping in FPGA semiconductor chip design. It is, however, an NP-complete problem, which means that there is no existing algorithm that can solve the problem quickly, and it is likely[link to P<>NP] to be impossible for such an algorithm to exist. This post will some of the best theoretical and practical approaches that have been discovered for fast bin packing.
 
