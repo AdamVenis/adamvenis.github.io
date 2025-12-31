@@ -1,5 +1,5 @@
 ---
-title: "Fibonacci Overkill"
+title: "A Fast Solution to a Fibonacci Problem"
 mathjax: true
 layout: post
 ---
